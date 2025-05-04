@@ -16,6 +16,7 @@ namespace ImageTemplate
         }
 
         RGBPixel[,] ImageMatrix;
+        PixelGraph graph;
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
@@ -26,6 +27,7 @@ namespace ImageTemplate
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
+                graph = new PixelGraph(this.ImageMatrix);
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
