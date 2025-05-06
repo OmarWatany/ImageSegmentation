@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace ImageTemplate
 {
-    public struct Link
+    public struct Edge
     {
         public (int x, int y) index;
         public RGBPixel weight;
@@ -27,10 +27,10 @@ namespace ImageTemplate
         private byte size;
 
         public (int x, int y) index;
-        public Link[] neighbors;
+        public Edge[] neighbors;
         public void Init((int x, int y) index)
         {
-            neighbors = new Link[8];
+            neighbors = new Edge[8];
             this.index = index;
             for (int i = 0; i < neighbors.Length; i++)
                 neighbors[i].index = (-1, -1);
