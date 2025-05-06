@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
+﻿
 namespace ImageTemplate
 {
     public struct Edge
@@ -27,12 +19,13 @@ namespace ImageTemplate
         private byte size;
 
         public (int x, int y) index;
+        int segmentID;
         public Edge[] neighbors;
-        public void Init((int x, int y) index)
+        public void Init((int x, int y) index) //O(1)
         {
             neighbors = new Edge[8];
             this.index = index;
-            for (int i = 0; i < neighbors.Length; i++)
+            for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].index = (-1, -1);
         }
     }
@@ -42,12 +35,12 @@ namespace ImageTemplate
         private Node[,] nodes { get; }
         private RGBPixel[,] picture;
 
-        public PixelGraph(RGBPixel[,] picture)
+        public PixelGraph(RGBPixel[,] picture) //O(N^2)
         {
-            this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use?
+            this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use? //O(N^2)
             nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
-            for (int y = 0; y < picture.GetLength(0); y++)
+            for (int y = 0; y < picture.GetLength(0); y++) //O(N^2)
             {
                 for (int x = 0; x < picture.GetLength(1); x++)
                 {
