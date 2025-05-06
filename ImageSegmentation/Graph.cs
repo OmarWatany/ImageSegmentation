@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace ImageTemplate
 {
@@ -38,29 +39,31 @@ namespace ImageTemplate
 
     public class PixelGraph
     {
-        private Node[] nodes { get; }
+        private Node[,] nodes { get; }
+        private RGBPixel[,] picture;
 
         public PixelGraph(RGBPixel[,] picture)
         {
-            nodes = new Node[picture.Length];
+            this.picture = picture;
+            nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
             for (int y = 0; y < picture.GetLength(0); y++)
             {
                 for (int x = 0; x < picture.GetLength(1); x++)
                 {
-                    // convert 2D Array index to 1D
-                    nodes[y * picture.GetLength(1) + x].Init((x, y));
+                    nodes[y, x].Init((x, y));
 
                     int linkIdx = 0;
                     for (int r = -1; r <= 1; r++)
                     {
                         for (int c = -1; c <= 1; c++)
                         {
+                            // traverse the surrounding cells
                             if (r == 0 && c == 0) continue;
                             if (y + r < 0 || y + r >= picture.GetLength(0)) continue;
                             if (x + c < 0 || x + c >= picture.GetLength(1)) continue;
-                            nodes[y * picture.GetLength(1) + x].neighbors[linkIdx].index = (x + c, y + r);
-                            nodes[y * picture.GetLength(1) + x].neighbors[linkIdx].CalcWeight(
+                            nodes[y, x].neighbors[linkIdx].index = (x + c, y + r);
+                            nodes[y, x].neighbors[linkIdx].CalcWeight(
                                 pixel1: picture[y, x], pixel2: picture[y + r, x + c]
                             );
                             linkIdx++;
