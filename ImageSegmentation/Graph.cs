@@ -18,7 +18,7 @@
         private byte size;
 
         public (int x, int y) index;
-        int segmentID;
+        public int segmentID;
         public Edge[] neighbors;
         public void Init((int x, int y) index) //O(1)
         {
@@ -49,12 +49,16 @@
             this.width = picture.GetLength(1);
             nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
-            for (int y = 0; y < picture.GetLength(0); y++) //O(N^2)
+            for (int y = 0; y < height; y++) //O(N^2)
             {
-                for (int x = 0; x < picture.GetLength(1); x++)
+                for (int x = 0; x < width; x++)
                 {
+                    
                     nodes[y, x].Init((x, y));
-
+                    if (y < height / 2)
+                        nodes[y, x].segmentID = (x < width / 2) ? 1 : 2;
+                    else
+                        nodes[y, x].segmentID = (x < width / 2) ? 3 : 4;
                     int linkIdx = 0;
                     for (int r = -1; r <= 1; r++)
                     {

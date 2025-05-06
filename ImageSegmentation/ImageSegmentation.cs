@@ -8,19 +8,20 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    if (i<graph.height/2)
+                    switch (graph.nodes[i, j].segmentID)
                     {
-                        if (j<graph.width/2)
+                        case 1:
                             graph.ColorPixel(i, j, 2, 3, 140);
-                        else
+                            break;
+                        case 2:
                             graph.ColorPixel(i, j, 10, 200, 4);
-                    }
-                    else
-                    {
-                        if (j < graph.width / 2)
+                            break;
+                        case 3:
                             graph.ColorPixel(i, j, 0, 0, 0);
-                        else
+                            break;
+                        case 4:
                             graph.ColorPixel(i, j, 190, 200, 0);
+                            break;
                     }
                 }
             }
