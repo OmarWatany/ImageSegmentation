@@ -1,5 +1,4 @@
-﻿
-namespace ImageTemplate
+﻿namespace ImageTemplate
 {
     public struct Edge
     {
@@ -32,12 +31,22 @@ namespace ImageTemplate
     
     public class PixelGraph
     {
-        private Node[,] nodes { get; }
-        private RGBPixel[,] picture;
+        public Node[,] nodes { get; }
+        public RGBPixel[,] picture;
+        public int noOfSegments = 0;
+        public int width, height;
+        public void ColorPixel(int y,int x, int r,int g,int b)
+        {
+            this.picture[y,x].red = (byte)r;
+            this.picture[y, x].green = (byte)g;
+            this.picture[y, x].blue = (byte)b;
+        }
 
         public PixelGraph(RGBPixel[,] picture) //O(N^2)
         {
             this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use? //O(N^2)
+            this.height = picture.GetLength(0);
+            this.width = picture.GetLength(1);
             nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
             for (int y = 0; y < picture.GetLength(0); y++) //O(N^2)
