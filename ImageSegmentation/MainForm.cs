@@ -16,6 +16,7 @@ namespace ImageTemplate
         }
 
         RGBPixel[,] ImageMatrix;
+        RGBPixel[,] ImageMatrix1;
         PixelGraph graph;
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -27,7 +28,7 @@ namespace ImageTemplate
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                graph = new PixelGraph(this.ImageMatrix);
+                //graph = new PixelGraph(this.ImageMatrix);
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
@@ -37,8 +38,8 @@ namespace ImageTemplate
         {
             double sigma = double.Parse(txtGaussSigma.Text);
             int maskSize = (int)nudMaskSize.Value ;
-            ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
-            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            ImageMatrix1 = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
+            ImageOperations.DisplayImage(ImageMatrix1, pictureBox2);
         }
 
         private void MainForm_Load(object sender, EventArgs e)

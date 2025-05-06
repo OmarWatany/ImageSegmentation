@@ -36,7 +36,7 @@ namespace ImageTemplate
                 neighbors[i].index = (-1, -1);
         }
     }
-
+    
     public class PixelGraph
     {
         private Node[,] nodes { get; }
@@ -44,7 +44,7 @@ namespace ImageTemplate
 
         public PixelGraph(RGBPixel[,] picture)
         {
-            this.picture = picture;
+            this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use?
             nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
             for (int y = 0; y < picture.GetLength(0); y++)
