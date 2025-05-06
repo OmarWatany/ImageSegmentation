@@ -15,9 +15,9 @@ namespace ImageTemplate
 
         public void CalcWeight(RGBPixel pixel1, RGBPixel pixel2)
         {
-            weight.red = pixel1.red > pixel2.red ? (byte)(pixel1.red - pixel2.red) : (byte)(pixel2.red - pixel1.red);
-            weight.blue = pixel1.blue > pixel2.blue ? (byte)(pixel1.blue - pixel2.blue) : (byte)(pixel2.blue - pixel1.blue);
-            weight.green = pixel1.green > pixel2.green ? (byte)(pixel1.green - pixel2.green) : (byte)(pixel2.green - pixel1.green);
+            weight.red = (byte)Math.Abs(pixel1.red - pixel2.red);
+            weight.blue = (byte)Math.Abs(pixel1.blue - pixel2.blue);
+            weight.green = (byte)Math.Abs(pixel1.green - pixel2.green);
         }
     }
 
