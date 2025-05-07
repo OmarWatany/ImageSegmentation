@@ -33,13 +33,11 @@
     {
         public Node[,] nodes { get; }
         public RGBPixel[,] picture;
-        public int noOfSegments = 0;
+        public int noOfSegments = 4;
         public int width, height;
-        public void ColorPixel(int y,int x, int r,int g,int b)
+        public void ColorPixel(int y,int x, RGBPixel color)
         {
-            this.picture[y,x].red = (byte)r;
-            this.picture[y, x].green = (byte)g;
-            this.picture[y, x].blue = (byte)b;
+            this.picture[y,x] = color;
         }
 
         public PixelGraph(RGBPixel[,] picture) //O(N^2)
@@ -56,9 +54,9 @@
                     
                     nodes[y, x].Init((x, y));
                     if (y < height / 2)
-                        nodes[y, x].segmentID = (x < width / 2) ? 1 : 2;
+                        nodes[y, x].segmentID = (x < width / 2) ? 0 : 1;
                     else
-                        nodes[y, x].segmentID = (x < width / 2) ? 3 : 4;
+                        nodes[y, x].segmentID = (x < width / 2) ? 2 : 3;
                     int linkIdx = 0;
                     for (int r = -1; r <= 1; r++)
                     {
