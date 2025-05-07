@@ -16,7 +16,6 @@ namespace ImageTemplate
         }
 
         RGBPixel[,] ImageMatrix;
-        RGBPixel[,] ImageMatrix1;
         PixelGraph graph;
 
         private void btnOpen_Click(object sender, EventArgs e)
@@ -38,8 +37,8 @@ namespace ImageTemplate
         {
             double sigma = double.Parse(txtGaussSigma.Text);
             int maskSize = (int)nudMaskSize.Value ;
-            ImageMatrix1 = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
-            ImageOperations.DisplayImage(ImageMatrix1, pictureBox2);
+            ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
+            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
