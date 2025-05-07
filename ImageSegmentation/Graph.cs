@@ -33,31 +33,24 @@
     {
         public Node[,] nodes { get; }
         public RGBPixel[,] picture;
-        public int noOfSegments = 4;
+        public int noOfSegments = 0; //needs to be updated when segmenting
         public int width, height;
-        public void ColorPixel(int y,int x, RGBPixel color)
-        {
-            this.picture[y,x] = color;
-        }
 
-        public PixelGraph(RGBPixel[,] picture) //O(N^2)
+        public PixelGraph(RGBPixel[,] picture) //O(N) , N: number of pixels
         {
             this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use? //O(N^2)
             this.height = picture.GetLength(0);
             this.width = picture.GetLength(1);
+
             nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
-            for (int y = 0; y < height; y++) //O(N^2)
+            int linkIdx;
+            for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    
+                    linkIdx = 0;
                     nodes[y, x].Init((x, y));
-                    if (y < height / 2)
-                        nodes[y, x].segmentID = (x < width / 2) ? 0 : 1;
-                    else
-                        nodes[y, x].segmentID = (x < width / 2) ? 2 : 3;
-                    int linkIdx = 0;
                     for (int r = -1; r <= 1; r++)
                     {
                         for (int c = -1; c <= 1; c++)

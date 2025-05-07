@@ -29,8 +29,6 @@ namespace ImageTemplate
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 graph = new PixelGraph(this.ImageMatrix);
-                SegmentOperations.ColorSegments(graph);
-                ImageOperations.DisplayImage(graph.picture, pictureBox2);
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
