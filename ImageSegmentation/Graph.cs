@@ -48,12 +48,12 @@ namespace ImageTemplate
                     Nodes[y, x].Init();
                     for (int r = -1; r <= 1; r++)
                     {
+                        if (y + r < 0 || y + r >= picture.GetLength(0)) continue;
                         for (int c = -1; c <= 1; c++)
                         {
                             // traverse the surrounding cells
-                            if (r == 0 && c == 0) continue;
-                            if (y + r < 0 || y + r >= picture.GetLength(0)) continue;
                             if (x + c < 0 || x + c >= picture.GetLength(1)) continue;
+                            if (r == 0 && c == 0) continue;
                             Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].index = (x + c, y + r);
                             Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].CalcWeight(
                                  GetColor(picture[y, x]),  GetColor(picture[y + r, x + c])
