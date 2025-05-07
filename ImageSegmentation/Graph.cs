@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace ImageTemplate
+﻿namespace ImageTemplate
 {
-    public struct Link
+    public struct Edge
     {
         public (int x, int y) index;
         public RGBPixel weight;
@@ -27,33 +18,39 @@ namespace ImageTemplate
         private byte size;
 
         public (int x, int y) index;
-        public Link[] neighbors;
-        public void Init((int x, int y) index)
+        public int segmentID;
+        public Edge[] neighbors;
+        public void Init((int x, int y) index) //O(1)
         {
-            neighbors = new Link[8];
+            neighbors = new Edge[8];
             this.index = index;
-            for (int i = 0; i < neighbors.Length; i++)
+            for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].index = (-1, -1);
         }
     }
-
+    
     public class PixelGraph
     {
-        private Node[,] nodes { get; }
-        private RGBPixel[,] picture;
+        public Node[,] nodes { get; }
+        public RGBPixel[,] picture;
+        public int noOfSegments = 0; //needs to be updated when segmenting
+        public int width, height;
 
-        public PixelGraph(RGBPixel[,] picture)
+        public PixelGraph(RGBPixel[,] picture) //O(N) , N: number of pixels
         {
-            this.picture = picture;
+            this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use? //O(N^2)
+            this.height = picture.GetLength(0);
+            this.width = picture.GetLength(1);
+
             nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
-            for (int y = 0; y < picture.GetLength(0); y++)
+            int linkIdx;
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 0; x < picture.GetLength(1); x++)
+                for (int x = 0; x < width; x++)
                 {
+                    linkIdx = 0;
                     nodes[y, x].Init((x, y));
-
-                    int linkIdx = 0;
                     for (int r = -1; r <= 1; r++)
                     {
                         for (int c = -1; c <= 1; c++)
