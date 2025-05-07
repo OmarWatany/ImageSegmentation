@@ -20,7 +20,8 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    graph.picture[i, j] = colors[graph.nodes[i, j].segmentID];
+                    // TODO: Find Intersection between red, blue and green
+                    graph.Picture[i, j] = colors[graph.Nodes[i, j].segmentID];
                 }
             }
         }

@@ -1,14 +1,13 @@
 ## Requirements
 
-[ ] - graph representation/construction
-  [ ] - choose applicable representation (could change) (Omar Watany)
-    [ ] - color/weights building (Omar Watany)
-  [ ] - provide an interface to access pixels (iterator) (Omar Hakim)
+[X] - graph representation/construction
+  [X] - choose applicable representation (could change) (Omar Watany)
+    [X] - color/weights building (Omar Watany)
 
 [ ] - image segmentation ()
-  [ ] - segments representation (Hakim)
+  [X] - segments representation (Hakim)
   [ ] - intensity difference between neighbors (Ahmed Mostafa)
-  [ ] - intensity difference between two boundaries (Omar Tebry)
+  [ ] - intensity difference between two boundaries (Hakim)
 
 [ ] - image segments visualization ()
 

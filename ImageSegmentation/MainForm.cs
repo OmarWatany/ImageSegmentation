@@ -16,7 +16,9 @@ namespace ImageTemplate
         }
 
         RGBPixel[,] ImageMatrix;
-        PixelGraph graph;
+        PixelGraph RedGraph;
+        PixelGraph BlueGraph;
+        PixelGraph GreenGraph;
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
@@ -27,7 +29,10 @@ namespace ImageTemplate
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                graph = new PixelGraph(this.ImageMatrix);
+                //picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use? //O(N^2)
+                RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
+                BlueGraph = new PixelGraph(this.ImageMatrix,x => x.blue);
+                GreenGraph = new PixelGraph(this.ImageMatrix,x => x.green);
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
