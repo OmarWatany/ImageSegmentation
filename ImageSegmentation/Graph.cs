@@ -1,29 +1,27 @@
-﻿namespace ImageTemplate
+﻿using System;
+namespace ImageTemplate
 {
     public struct Edge
     {
+        // Should we just save color value ?
         public (int x, int y) index;
-        public RGBPixel weight;
+        public byte weight;
 
-        public void CalcWeight(RGBPixel pixel1, RGBPixel pixel2)
+        public void CalcWeight(byte pixel1, byte pixel2)
         {
-            weight.red = pixel1.red > pixel2.red ? (byte)(pixel1.red - pixel2.red) : (byte)(pixel2.red - pixel1.red);
-            weight.blue = pixel1.blue > pixel2.blue ? (byte)(pixel1.blue - pixel2.blue) : (byte)(pixel2.blue - pixel1.blue);
-            weight.green = pixel1.green > pixel2.green ? (byte)(pixel1.green - pixel2.green) : (byte)(pixel2.green - pixel1.green);
+            weight = pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
         }
     }
 
     public struct Node
     {
-        private byte size;
 
-        public (int x, int y) index;
         public int segmentID;
         public Edge[] neighbors;
-        public void Init((int x, int y) index) //O(1)
+        public byte neighborsCount;
+        public void Init() //O(1)
         {
             neighbors = new Edge[8];
-            this.index = index;
             for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].index = (-1, -1);
         }
@@ -31,26 +29,23 @@
     
     public class PixelGraph
     {
-        public Node[,] nodes { get; }
-        public RGBPixel[,] picture;
+        public Node[,] Nodes;
+        public RGBPixel[,] Picture;
         public int noOfSegments = 0; //needs to be updated when segmenting
         public int width, height;
 
-        public PixelGraph(RGBPixel[,] picture) //O(N) , N: number of pixels
+        public PixelGraph(RGBPixel[,] picture, Func<RGBPixel,byte> GetColor) //O(N) , N: number of pixels
         {
-            this.picture = ImageTemplate.ImageOperations.GaussianFilter1D(picture, 9, 0.8); //what filter size to use? //O(N^2)
             this.height = picture.GetLength(0);
             this.width = picture.GetLength(1);
 
-            nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
+            Nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
-            int linkIdx;
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    linkIdx = 0;
-                    nodes[y, x].Init((x, y));
+                    Nodes[y, x].Init();
                     for (int r = -1; r <= 1; r++)
                     {
                         for (int c = -1; c <= 1; c++)
@@ -59,11 +54,11 @@
                             if (r == 0 && c == 0) continue;
                             if (y + r < 0 || y + r >= picture.GetLength(0)) continue;
                             if (x + c < 0 || x + c >= picture.GetLength(1)) continue;
-                            nodes[y, x].neighbors[linkIdx].index = (x + c, y + r);
-                            nodes[y, x].neighbors[linkIdx].CalcWeight(
-                                pixel1: picture[y, x], pixel2: picture[y + r, x + c]
+                            Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].index = (x + c, y + r);
+                            Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].CalcWeight(
+                                 GetColor(picture[y, x]),  GetColor(picture[y + r, x + c])
                             );
-                            linkIdx++;
+                            Nodes[y, x].neighborsCount++;
                         }
                     }
                 }
