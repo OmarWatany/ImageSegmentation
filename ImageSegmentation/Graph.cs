@@ -21,6 +21,7 @@ namespace ImageTemplate
         public byte neighborsCount;
         public void Init() //O(1)
         {
+            segment.ID = -1;
             neighbors = new Edge[8];
             for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].index = (-1, -1);
