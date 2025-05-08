@@ -16,11 +16,12 @@ namespace ImageTemplate
     public struct Node
     {
 
-        public int segmentID;
+        public Segment segment;
         public Edge[] neighbors;
         public byte neighborsCount;
         public void Init() //O(1)
         {
+            segment.ID = -1;
             neighbors = new Edge[8];
             for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].index = (-1, -1);
@@ -31,7 +32,7 @@ namespace ImageTemplate
     {
         public Node[,] Nodes;
         public RGBPixel[,] Picture;
-        public int noOfSegments = 0; //needs to be updated when segmenting
+        public int noOfSegments = -1; //To make it easier when indexing
         public int width, height;
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel,byte> GetColor) //O(N) , N: number of pixels
