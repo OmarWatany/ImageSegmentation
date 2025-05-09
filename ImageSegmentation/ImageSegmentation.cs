@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Security;
 
@@ -43,12 +44,32 @@ namespace ImageTemplate
             segment.nodes.Add(node);
         }
 
-        private static bool PixelsMatch(Node a, Node b)
+        public static int InternalDifference(Segment segment)
         {
-            // TODO: Implement your actual pixel matching logic
-            return true;
+            return -1;
         }
 
+        public static int ComponentsDifference(Segment s1,Segment s2) //O(N) , N: number of nodes in the smaller segment
+        {
+            Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
+            Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
+            Node myNode;
+            int minEdge = int.MaxValue;
+            for (int i = 0; i < smallSegment.count; i++) 
+            {
+                myNode = smallSegment.nodes[i];
+                //for every node in the smaller segment:
+                for (int j = 0; j < myNode.neighborsCount; j++)
+                {
+                    //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
+                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    {
+                            minEdge = myNode.neighbors[j].weight;
+                    }
+                }
+            }
+            return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
+        }
         public static void SegmentChannel(PixelGraph channelGraph)
         {
             Node neighbor,myNode;
@@ -59,7 +80,7 @@ namespace ImageTemplate
                     myNode = channelGraph.Nodes[i, j];
                     foreach (Edge edge in myNode.neighbors)
                     {
-                        neighbor = channelGraph.Nodes[edge.index.y, edge.index.x];
+                        neighbor = channelGraph.Nodes[edge.node.index.y, edge.node.index.x];
                         if (IsSameSegment(myNode, neighbor))
                             continue;
 
@@ -101,8 +122,8 @@ namespace ImageTemplate
         }
         private static void HandleUnsegmentedNeighbor(PixelGraph graph, Node myNode, Node neighbor)
         {
-            if (!PixelsMatch(myNode, neighbor))
-                return;
+            //if (!PixelsMatch(myNode, neighbor))
+                //return;
 
             if (IsUnsegmented(myNode))
             {
@@ -118,7 +139,7 @@ namespace ImageTemplate
         {
             if (IsUnsegmented(myNode))
             {
-                if (PixelsMatch(myNode, neighbor))
+                //if (PixelsMatch(myNode, neighbor))
                 {
                     AddToSegment(myNode, neighbor.segment);
                 }
