@@ -36,21 +36,13 @@ namespace ImageTemplate
         public int noOfSegments = -1; //To make it easier when indexing
         public int width, height;
         bool[,] visited;
-        (int x, int y)[,] parent;
-        Segment s;
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel,byte> GetColor) //O(N) , N: number of pixels
         {
-            this.parent= new (int x, int y)[this.height, this.width];
             this.Picture = picture;
             this.height = picture.GetLength(0);
             this.width = picture.GetLength(1);
             this.visited = new bool[this.height, this.width];
-            this.noOfSegments = 1;
-            this.s = new Segment
-            {
-                ID = 0,
-            };
             Nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
 
             for (int y = 0; y < height; y++)
@@ -88,12 +80,10 @@ namespace ImageTemplate
                 {
                     n = Nodes[i, j];
                     this.visited[i,j] = true;
-                    this.Nodes[i,j].segment = this.s;
                     for (int k = 0; k < n.neighborsCount; k++)
                     {
                         if (this.visited[n.index.y, n.index.x]) continue;
                         this.visited[n.neighbors[k].index.y, n.neighbors[k].index.x] = true;
-                        this.Nodes[n.neighbors[k].index.y, n.neighbors[k].index.x].segment = this.s;
                     }
                     
                 }
