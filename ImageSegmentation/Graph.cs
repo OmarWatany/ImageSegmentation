@@ -4,9 +4,9 @@ namespace ImageTemplate
     public struct Edge
     {
         // Should we just save color value ?
-        public (int x, int y) index;
+        public Node node;
         public byte weight;
-
+        
         public void CalcWeight(byte pixel1, byte pixel2)
         {
             weight = pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
@@ -25,7 +25,7 @@ namespace ImageTemplate
             segment.ID = -1;
             neighbors = new Edge[8];
             for (int i = 0; i < 8; i++) //O(1)
-                neighbors[i].index = (-1, -1);
+                neighbors[i].node.index = (-1, -1);
         }
     }
     
@@ -52,14 +52,14 @@ namespace ImageTemplate
                     Nodes[y, x].Init();
                     for (int r = -1; r <= 1; r++)
                     {
-                        if (y + r < 0 || y + r >= picture.GetLength(0)) continue;
+                        if (y + r < 0 || y + r >= height) continue;
                         for (int c = -1; c <= 1; c++)
                         {
                             // traverse the surrounding cells
-                            if (x + c < 0 || x + c >= picture.GetLength(1)) continue;
+                            if (x + c < 0 || x + c >= width) continue;
                             if (r == 0 && c == 0) continue;
                             Nodes[y, x].index = (y, x);
-                            Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].index = (x + c, y + r);
+                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].node = Nodes[y + r, x + c];
                             Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].CalcWeight(
                                  GetColor(picture[y, x]),  GetColor(picture[y + r, x + c])
                             );
@@ -83,7 +83,7 @@ namespace ImageTemplate
                     for (int k = 0; k < n.neighborsCount; k++)
                     {
                         if (this.visited[n.index.y, n.index.x]) continue;
-                        this.visited[n.neighbors[k].index.y, n.neighbors[k].index.x] = true;
+                        this.visited[n.neighbors[k].node.index.y, n.neighbors[k].node.index.x] = true;
                     }
                     
                 }
