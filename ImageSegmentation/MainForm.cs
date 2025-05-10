@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
@@ -41,9 +42,27 @@ namespace ImageTemplate
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
             double sigma = double.Parse(txtGaussSigma.Text);
-            int maskSize = (int)nudMaskSize.Value ;
+            int maskSize = (int)nudMaskSize.Value;
             ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                saveFileDialog.Title = "Save Segment Report";
+                saveFileDialog.FileName = "SegmentReport.txt";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
+                    {
+                        sw.WriteLine("The txt file works!!!");
+                        // the actual results here...
+                    }
+
+                    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
+                        "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
