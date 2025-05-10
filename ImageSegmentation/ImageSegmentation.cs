@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Security;
 
@@ -17,7 +18,7 @@ namespace ImageTemplate
             RGBPixel[] colors = new RGBPixel[m];
             for (int i = 0; i < m; i++)
             {
-                colors[i].red = (byte) ((i*100)%255);
+                colors[i].red = (byte)((i * 100) % 255);
                 colors[i].green = (byte)((i * 20) % 255);
                 colors[i].blue = (byte)((i * 30) % 255);
             }
@@ -25,15 +26,15 @@ namespace ImageTemplate
         }
         // TODO: Find Intersection between red, blue and green
 
-        public static void CreateSegment(PixelGraph graph, Node n1, Node n2)
+        public static void CreateSegment(PixelGraph graph, Node n)
         {
             Segment newSegment = new Segment
             {
                 ID = ++graph.noOfSegments,
                 count = 2,
-                nodes = new List<Node> { n1, n2 } 
+                nodes = new List<Node> { n }
             };
-            n1.segment = n2.segment = newSegment;
+            n.segment = newSegment;
         }
 
         public static void AddToSegment(Node node, Segment segment)
@@ -43,33 +44,93 @@ namespace ImageTemplate
             segment.nodes.Add(node);
         }
 
-        private static bool PixelsMatch(Node a, Node b)
+        public static int InternalDifference(Segment segment)
         {
-            // TODO: Implement your actual pixel matching logic
-            return true;
+            if (segment.count == 1) return 0;
+            return -1;
         }
 
-        public static void SegmentChannel(PixelGraph channelGraph)
+        public static int SegmentsDifference(Segment s1, Segment s2) //O(N) , N: number of nodes in the smaller segment
         {
-            Node neighbor,myNode;
+            Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
+            Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
+            Node myNode;
+            int minEdge = int.MaxValue;
+            for (int i = 0; i < smallSegment.count; i++)
+            {
+                myNode = smallSegment.nodes[i];
+                //for every node in the smaller segment:
+                for (int j = 0; j < myNode.neighborsCount; j++)
+                {
+                    //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
+                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    {
+                        minEdge = myNode.neighbors[j].weight;
+                    }
+                }
+            }
+            return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
+        }
+
+        public static bool SegmentsComparison(Segment s1, Segment s2, int k)
+        {
+            int internalDiff1 = InternalDifference(s1);
+            int internalDiff2 = InternalDifference(s2);
+            int segmentsDifference = SegmentsDifference(s1, s2);
+            if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
+            int tao1 = k / s1.count;
+            int tao2 = k / s2.count;
+            int MInt = Math.Min(internalDiff1 + tao1, internalDiff2 + tao2);
+            return (segmentsDifference > MInt);
+        }
+
+        public static void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
+        {
+            graph.noOfSegments--;
+            Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
+            Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
+            Node temp;
+            for (int i = 0; i < smallSegment.count; i++)
+            {
+                bigSegment.count++;
+                temp = smallSegment.nodes[i];
+
+                temp.segment = bigSegment;
+                bigSegment.nodes.Add(temp);
+
+                //should be unnecessary , just for debugging , and to make sure
+                smallSegment.nodes.RemoveAt(i);
+                smallSegment.count--;
+            }
+        }
+        public static void SegmentChannel(PixelGraph channelGraph, int k)
+        {
+            Node neighbor, myNode;
             for (int i = 0; i < channelGraph.height; i++)
             {
                 for (int j = 0; j < channelGraph.width; j++)
                 {
                     myNode = channelGraph.Nodes[i, j];
+
+                    //create a segment just for this node so we can use segments comparison function
+                    if (IsUnsegmented(myNode)) CreateSegment(channelGraph, myNode);
+
                     foreach (Edge edge in myNode.neighbors)
                     {
-                        neighbor = channelGraph.Nodes[edge.index.y, edge.index.x];
-                        if (IsSameSegment(myNode, neighbor))
+                        neighbor = channelGraph.Nodes[edge.node.index.y, edge.node.index.x];
+
+                        if (AreSameSegment(myNode, neighbor))
                             continue;
 
                         if (IsUnsegmented(neighbor))
                         {
-                            HandleUnsegmentedNeighbor(channelGraph, myNode, neighbor);
+                            CreateSegment(channelGraph, neighbor);
                         }
-                        else
+
+                        //if the function returns true, then no merging and continue, else : merge
+                        if (!SegmentsComparison(neighbor.segment, myNode.segment, k))
                         {
-                            HandleSegmentedNeighbor(myNode, neighbor);
+                            MergeSegments(channelGraph, myNode.segment, neighbor.segment);
                         }
                     }
                 }
@@ -90,7 +151,7 @@ namespace ImageTemplate
 
         //Helper functions
 
-        private static bool IsSameSegment(Node a, Node b)
+        private static bool AreSameSegment(Node a, Node b)
         {
             return a.segment.ID == b.segment.ID;
         }
@@ -98,35 +159,6 @@ namespace ImageTemplate
         private static bool IsUnsegmented(Node node)
         {
             return node.segment.ID == -1;
-        }
-        private static void HandleUnsegmentedNeighbor(PixelGraph graph, Node myNode, Node neighbor)
-        {
-            if (!PixelsMatch(myNode, neighbor))
-                return;
-
-            if (IsUnsegmented(myNode))
-            {
-                CreateSegment(graph, myNode, neighbor);
-            }
-            else
-            {
-                AddToSegment(neighbor, myNode.segment);
-            }
-        }
-
-        private static void HandleSegmentedNeighbor(Node myNode, Node neighbor)
-        {
-            if (IsUnsegmented(myNode))
-            {
-                if (PixelsMatch(myNode, neighbor))
-                {
-                    AddToSegment(myNode, neighbor.segment);
-                }
-            }
-            else
-            {
-                // TODO: Apply segment comparison/merging logic
-            }
         }
     }
 }
