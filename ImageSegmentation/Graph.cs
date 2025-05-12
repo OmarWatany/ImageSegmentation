@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 namespace ImageTemplate
 {
     public struct Edge
@@ -15,35 +16,37 @@ namespace ImageTemplate
 
     public struct Node
     {
-
-        public Segment segment;
+        //public Segment segment;
         public Edge[] neighbors;
         public byte neighborsCount;
         public (int y, int x) index;
+        public int segmentID;
         public void Init() //O(1)
         {
-            segment.ID = -1;
+            segmentID = -1;
             neighbors = new Edge[8];
             for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].node.index = (-1, -1);
         }
     }
-    
+
     public class PixelGraph
     {
         public Node[,] Nodes;
         public RGBPixel[,] Picture;
-        public int noOfSegments = -1; //To make it easier when indexing
+        public Segments Segments;
+
         public int width, height;
         bool[,] visited;
 
-        public PixelGraph(RGBPixel[,] picture, Func<RGBPixel,byte> GetColor) //O(N) , N: number of pixels
+        public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels
         {
             this.Picture = picture;
             this.height = picture.GetLength(0);
             this.width = picture.GetLength(1);
             this.visited = new bool[this.height, this.width];
-            Nodes = new Node[picture.GetLength(0),picture.GetLength(1)];
+            this.Nodes = new Node[picture.GetLength(0), picture.GetLength(1)];
+            this.Segments = new Segments();
 
             for (int y = 0; y < height; y++)
             {
@@ -60,8 +63,8 @@ namespace ImageTemplate
                             if (r == 0 && c == 0) continue;
                             Nodes[y, x].index = (y, x);
                             Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].node = Nodes[y + r, x + c];
-                            Nodes[y, x].neighbors[Nodes[y,x].neighborsCount].CalcWeight(
-                                 GetColor(picture[y, x]),  GetColor(picture[y + r, x + c])
+                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].CalcWeight(
+                                 GetColor(picture[y, x]), GetColor(picture[y + r, x + c])
                             );
                             Nodes[y, x].neighborsCount++;
                         }
@@ -74,22 +77,20 @@ namespace ImageTemplate
         public void DFS()
         {
             Node n;
-            for (int i = 0; i < this.height; i++)
+            for (int r = 0; r < this.height; r++)
             {
-                for (int j = 0; j < this.width; j++)
+                for (int c = 0; c < this.width; c++)
                 {
-                    n = Nodes[i, j];
-                    this.visited[i,j] = true;
+                    n = Nodes[r, c];
+                    this.visited[r, c] = true;
                     for (int k = 0; k < n.neighborsCount; k++)
                     {
                         if (this.visited[n.index.y, n.index.x]) continue;
                         this.visited[n.neighbors[k].node.index.y, n.neighbors[k].node.index.x] = true;
                     }
-                    
+
                 }
             }
         }
-
-
     }
 }
