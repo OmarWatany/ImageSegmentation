@@ -61,15 +61,17 @@ namespace ImageTemplate
         }
         // TODO: Find Intersection between red, blue and green
 
-        public static void CreateSegment(PixelGraph graph, Node n)
+        public static void CreateSegment(PixelGraph graph, (int y, int x) index)
         {
+
             Segment newSegment = new Segment
             {
                 ID = graph.Segments.Count,
                 count = 1,
-                nodes = new List<Node> { n }
+                nodes = new List<Node> { graph.Nodes[index.y,index.x] }
             };
-            n.segmentID = newSegment.ID;
+            graph.Nodes[index.y, index.x].segmentID = newSegment.ID;
+
             graph.Segments.Add(newSegment);
         }
 
@@ -80,7 +82,7 @@ namespace ImageTemplate
             segment.nodes.Add(node);
         }
 
-        public static int InternalDifference(Segment segment)
+        public static int InternalDifference(PixelGraph graph, Segment segment)
         {
             // If the segment has 1 or less than 1, return 0
             if (segment.count <= 1) return 0;
@@ -115,7 +117,7 @@ namespace ImageTemplate
             for (int i = 0; i < edges.Count; i++)
             {
                 Node root1 = FindRoot(edges[i].node, parent);
-                Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
+                Node root2 = FindRoot(graph.Segments.segments[edges[i].node.segmentID].nodes[0], parent);
                 if (!root1.Equals(root2))
                 {
                     parent[root1] = root2;
@@ -152,10 +154,10 @@ namespace ImageTemplate
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
 
-        public static bool SegmentsComparison(Segment s1, Segment s2, int k)
+        public static bool SegmentsComparison(PixelGraph graph, Segment s1, Segment s2, int k)
         {
-            int internalDiff1 = InternalDifference(s1);
-            int internalDiff2 = InternalDifference(s2);
+            int internalDiff1 = InternalDifference(graph, s1);
+            int internalDiff2 = InternalDifference(graph, s2);
             int segmentsDifference = SegmentsDifference(s1, s2);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
             int tao1 = k / s1.count;
@@ -194,22 +196,22 @@ namespace ImageTemplate
                     myNode = channelGraph.Nodes[i, j];
 
                     //create a segment just for this node so we can use segments comparison function
-                    if (IsUnsegmented(myNode)) CreateSegment(channelGraph, myNode);
+                    if (IsUnsegmented(myNode)) CreateSegment(channelGraph, myNode.index);
 
-                    foreach (Edge edge in myNode.neighbors)
+                    for (int l = 0; l < myNode.neighborsCount; l++)
                     {
-                        neighbor = channelGraph.Nodes[edge.node.index.y, edge.node.index.x];
+                        neighbor = myNode.neighbors[l].node;
 
                         if (AreSameSegment(myNode, neighbor))
                             continue;
 
                         if (IsUnsegmented(neighbor))
                         {
-                            CreateSegment(channelGraph, neighbor);
+                            CreateSegment(channelGraph, neighbor.index);
                         }
 
                         //if the function returns true, then no merging and continue, else : merge
-                        if (!SegmentsComparison(
+                        if (!SegmentsComparison(channelGraph,
                             channelGraph.Segments.At(neighbor.segmentID),
                             channelGraph.Segments.At(myNode.segmentID),
                             k))
@@ -231,7 +233,9 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    graph.Picture[i, j] = colors[graph.Nodes[i, j].segmentID];
+                    int id = graph.Nodes[i, j].segmentID;
+                    RGBPixel c= colors[id];
+                    graph.Picture[i, j] = c;
                 }
             }
         }
