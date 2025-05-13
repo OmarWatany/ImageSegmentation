@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Security;
 
@@ -46,8 +46,52 @@ namespace ImageTemplate
 
         public static int InternalDifference(Segment segment)
         {
-            if (segment.count == 1) return 0;
-            return -1;
+            // If the segment has 1 or less than 1, return 0
+            if (segment.count <= 1) return 0;
+
+            List<Edge> edges = new List<Edge>();
+            // Collect all edges where both nodes are in the same segment
+            for (int i = 0; i < segment.nodes.Count; i++)
+            {
+                Node node = segment.nodes[i];
+                for (int j = 0; j < node.neighbors.Length; j++)
+                {
+                    Edge edge = node.neighbors[j];
+                    if (edge.node.segment.ID == segment.ID)
+                    {
+                        edges.Add(edge);
+                    }
+                }
+            }
+
+            // Sort edges by weight  (ascending)
+            edges.Sort((a, b) => a.weight.CompareTo(b.weight));
+
+            // Initialize union-find structure for Kruskal's algorithm
+            Dictionary<Node, Node> parent = new Dictionary<Node, Node>();
+            for (int i = 0; i < segment.nodes.Count; i++)
+            {
+                parent[segment.nodes[i]] = segment.nodes[i];
+            }
+
+            int maxEdgeWeight = 0;
+            // build the maximum spanning tree within the segment
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Node root1 = FindRoot(edges[i].node, parent);
+                Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
+                if (!root1.Equals(root2))
+                {
+                    parent[root1] = root2;
+                    if (edges[i].weight > maxEdgeWeight)
+                    {
+                        maxEdgeWeight = edges[i].weight;
+                    }
+                }
+            }
+
+            // Return the maximum edge weight in the segment
+            return maxEdgeWeight;
         }
 
         public static int SegmentsDifference(Segment s1, Segment s2) //O(N) , N: number of nodes in the smaller segment
@@ -160,5 +204,14 @@ namespace ImageTemplate
         {
             return node.segment.ID == -1;
         }
+        private static Node FindRoot(Node node, Dictionary<Node, Node> parent)
+        {
+            if (!parent[node].Equals(node))
+            {
+                parent[node] = FindRoot(parent[node], parent);
+            }
+            return parent[node];
+        }
+
     }
 }
