@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading;
 
+//Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
 {
     public struct Segment
@@ -25,7 +24,7 @@ namespace ImageTemplate
             this.nodes.Add(node);
         }
 
-        public int InternalDifference()
+        public int InternalDifference(PixelGraph graph)
         {
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
@@ -38,7 +37,7 @@ namespace ImageTemplate
                 for (int j = 0; j < node.neighbors.Length; j++)
                 {
                     Edge edge = node.neighbors[j];
-                    if (edge.node.segmentID == this.ID)
+                    if (graph.Node(edge.index).segmentID == this.ID)
                     {
                         edges.Add(edge);
                     }
@@ -59,8 +58,8 @@ namespace ImageTemplate
             // build the maximum spanning tree within the segment
             for (int i = 0; i < edges.Count; i++)
             {
-                Node root1 = FindRoot(edges[i].node, parent);
-                Node root2 = FindRoot(this.nodes[0], parent);
+                Node root1 = FindRoot(graph.Node(edges[i].index), parent);
+                Node root2 = FindRoot(graph.Segments.segments[graph.Node(edges[i].index).segmentID].nodes[0], parent);
                 if (!root1.Equals(root2))
                 {
                     parent[root1] = root2;
@@ -84,7 +83,7 @@ namespace ImageTemplate
             return parent[node];
         }
 
-        public int SegmentsDifference(Segment s2) //O(N) , N: number of nodes in the smaller segment
+        public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
         {
             Segment smallSegment = (this.count < s2.count) ? this : s2;
             Segment bigSegment = (this.count < s2.count) ? s2 : this;
@@ -97,7 +96,7 @@ namespace ImageTemplate
                 for (int j = 0; j < myNode.neighborsCount; j++)
                 {
                     //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((myNode.neighbors[j].node.segmentID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    if ((graph.Node(myNode.neighbors[j].index).segmentID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
                     {
                         minEdge = myNode.neighbors[j].weight;
                     }
@@ -106,11 +105,11 @@ namespace ImageTemplate
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
 
-        public bool SegmentsComparison(Segment s2, int k)
+        public bool SegmentsComparison(PixelGraph graph, Segment s2, int k)
         {
-            int internalDiff1 = this.InternalDifference();
-            int internalDiff2 = s2.InternalDifference();
-            int segmentsDifference = this.SegmentsDifference(s2);
+            int internalDiff1 = this.InternalDifference(graph);
+            int internalDiff2 = s2.InternalDifference(graph);
+            int segmentsDifference = this.SegmentsDifference(graph, s2);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
             int tao1 = k / this.count;
             int tao2 = k / s2.count;
@@ -217,7 +216,7 @@ namespace ImageTemplate
 
                     for (int l = 0; l < myNode.neighborsCount; l++)
                     {
-                        neighbor = myNode.neighbors[l].node;
+                        neighbor = channelGraph.Node(myNode.neighbors[l].index);
 
                         if (AreSameSegment(myNode, neighbor))
                             continue;
@@ -229,7 +228,7 @@ namespace ImageTemplate
 
                         //if the function returns true, then no merging and continue, else : merge
                         if (!channelGraph.Segments.At(neighbor.segmentID)
-                            .SegmentsComparison(
+                            .SegmentsComparison(channelGraph,
                             channelGraph.Segments.At(myNode.segmentID),
                             k))
                         {
