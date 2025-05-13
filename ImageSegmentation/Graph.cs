@@ -71,26 +71,6 @@ namespace ImageTemplate
                     }
                 }
             }
-            DFS();
-        }
-
-        public void DFS()
-        {
-            Node n;
-            for (int r = 0; r < this.height; r++)
-            {
-                for (int c = 0; c < this.width; c++)
-                {
-                    n = Nodes[r, c];
-                    this.visited[r, c] = true;
-                    for (int k = 0; k < n.neighborsCount; k++)
-                    {
-                        if (this.visited[n.index.y, n.index.x]) continue;
-                        this.visited[n.neighbors[k].node.index.y, n.neighbors[k].node.index.x] = true;
-                    }
-
-                }
-            }
         }
     }
 }
