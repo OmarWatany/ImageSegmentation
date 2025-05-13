@@ -31,8 +31,8 @@ namespace ImageTemplate
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 9, 0.8); //what filter size to use? //O(N^2)
                 RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
-                SegmentOperations.SegmentChannel(RedGraph,1);
-                SegmentOperations.ColorSegments(RedGraph);
+                RedGraph.Segments.SegmentChannel(RedGraph,1);
+                RedGraph.Segments.ColorSegments(RedGraph);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
 
                 //BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
