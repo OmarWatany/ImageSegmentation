@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Security;
+using System.Threading;
 
 namespace ImageTemplate
 {
@@ -11,7 +11,42 @@ namespace ImageTemplate
         //TODO: CalculateInternalDifference
     };
 
-    public class SegmentOperations
+    public class Segments
+    {
+        public List<Segment> segments;
+        public int Count
+        {
+            get  => segments.Count;
+        }
+
+        public Segments()
+        {
+            segments = new List<Segment>();
+        }
+
+        // return new segment's ID
+        public int New()
+        {
+            segments.Add(new Segment { ID = segments.Count });
+            return segments.Count - 1;
+        }
+
+        public int Add(Segment seg)
+        {
+            segments.Add(seg);
+            return segments.Count - 1;
+        }
+
+        public Segment At(int segmentID)
+        {
+            if (segmentID < 0) return new Segment { ID = -1 }; // Empty Segment
+            return  segments[segmentID];
+        }
+
+        public Segment Last() => segments[this.Count];
+    }
+
+    public static class SegmentOperations
     {
         public static RGBPixel[] CreateRandomColors(int m) //O(M) , M: number of segments
         {
@@ -30,16 +65,17 @@ namespace ImageTemplate
         {
             Segment newSegment = new Segment
             {
-                ID = ++graph.noOfSegments,
-                count = 2,
+                ID = graph.Segments.Count,
+                count = 1,
                 nodes = new List<Node> { n }
             };
-            n.segment = newSegment;
+            n.segmentID = newSegment.ID;
+            graph.Segments.Add(newSegment);
         }
 
-        public static void AddToSegment(Node node, Segment segment)
+        public static void AddToSegment(Segment segment, Node node)
         {
-            node.segment = segment;
+            node.segmentID = segment.ID;
             segment.count++;
             segment.nodes.Add(node);
         }
@@ -57,7 +93,7 @@ namespace ImageTemplate
                 for (int j = 0; j < node.neighbors.Length; j++)
                 {
                     Edge edge = node.neighbors[j];
-                    if (edge.node.segment.ID == segment.ID)
+                    if (edge.node.segmentID == segment.ID)
                     {
                         edges.Add(edge);
                     }
@@ -107,7 +143,7 @@ namespace ImageTemplate
                 for (int j = 0; j < myNode.neighborsCount; j++)
                 {
                     //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    if ((myNode.neighbors[j].node.segmentID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
                     {
                         minEdge = myNode.neighbors[j].weight;
                     }
@@ -130,7 +166,6 @@ namespace ImageTemplate
 
         public static void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
         {
-            graph.noOfSegments--;
             Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
             Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
             Node temp;
@@ -139,14 +174,16 @@ namespace ImageTemplate
                 bigSegment.count++;
                 temp = smallSegment.nodes[i];
 
-                temp.segment = bigSegment;
+                temp.segmentID = bigSegment.ID;
                 bigSegment.nodes.Add(temp);
 
                 //should be unnecessary , just for debugging , and to make sure
                 smallSegment.nodes.RemoveAt(i);
                 smallSegment.count--;
             }
+            graph.Segments.segments.Remove(smallSegment);
         }
+
         public static void SegmentChannel(PixelGraph channelGraph, int k)
         {
             Node neighbor, myNode;
@@ -172,9 +209,15 @@ namespace ImageTemplate
                         }
 
                         //if the function returns true, then no merging and continue, else : merge
-                        if (!SegmentsComparison(neighbor.segment, myNode.segment, k))
+                        if (!SegmentsComparison(
+                            channelGraph.Segments.At(neighbor.segmentID),
+                            channelGraph.Segments.At(myNode.segmentID),
+                            k))
                         {
-                            MergeSegments(channelGraph, myNode.segment, neighbor.segment);
+                            MergeSegments(channelGraph, 
+                                channelGraph.Segments.At(neighbor.segmentID),
+                                channelGraph.Segments.At(myNode.segmentID)
+                            );
                         }
                     }
                 }
@@ -183,27 +226,20 @@ namespace ImageTemplate
 
         public static void ColorSegments(PixelGraph graph) //O(N) , N: number of pixels
         {
-            RGBPixel[] colors = CreateRandomColors(graph.noOfSegments);
+            RGBPixel[] colors = CreateRandomColors(graph.Segments.Count);
             for (int i = 0; i < graph.height; i++)
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    graph.Picture[i, j] = colors[graph.Nodes[i, j].segment.ID];
+                    graph.Picture[i, j] = colors[graph.Nodes[i, j].segmentID];
                 }
             }
         }
 
         //Helper functions
 
-        private static bool AreSameSegment(Node a, Node b)
-        {
-            return a.segment.ID == b.segment.ID;
-        }
+        private static bool AreSameSegment(Node a, Node b) => a.segmentID == b.segmentID;
 
-        private static bool IsUnsegmented(Node node)
-        {
-            return node.segment.ID == -1;
-        }
         private static Node FindRoot(Node node, Dictionary<Node, Node> parent)
         {
             if (!parent[node].Equals(node))
@@ -213,5 +249,6 @@ namespace ImageTemplate
             return parent[node];
         }
 
+        private static bool IsUnsegmented(Node node) => node.segmentID == -1;
     }
 }
