@@ -17,8 +17,8 @@ namespace ImageTemplate
 
         RGBPixel[,] ImageMatrix;
         PixelGraph RedGraph;
-        PixelGraph BlueGraph;
-        PixelGraph GreenGraph;
+        //PixelGraph BlueGraph;
+        //PixelGraph GreenGraph;
 
         private void btnOpen_Click(object sender, EventArgs e)
         {

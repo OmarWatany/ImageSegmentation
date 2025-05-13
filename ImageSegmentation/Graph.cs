@@ -37,14 +37,12 @@ namespace ImageTemplate
         public Segments Segments;
 
         public int width, height;
-        bool[,] visited;
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels
         {
             this.Picture = picture;
             this.height = picture.GetLength(0);
             this.width = picture.GetLength(1);
-            this.visited = new bool[this.height, this.width];
             this.Nodes = new Node[picture.GetLength(0), picture.GetLength(1)];
             this.Segments = new Segments();
 

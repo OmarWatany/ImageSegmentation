@@ -25,7 +25,7 @@ namespace ImageTemplate
             this.nodes.Add(node);
         }
 
-        public int InternalDifference()
+        public int InternalDifference(PixelGraph graph)
         {
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
@@ -60,7 +60,7 @@ namespace ImageTemplate
             for (int i = 0; i < edges.Count; i++)
             {
                 Node root1 = FindRoot(edges[i].node, parent);
-                Node root2 = FindRoot(this.nodes[0], parent);
+                Node root2 = FindRoot(graph.Segments.segments[edges[i].node.segmentID].nodes[0], parent);
                 if (!root1.Equals(root2))
                 {
                     parent[root1] = root2;
@@ -106,10 +106,10 @@ namespace ImageTemplate
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
 
-        public bool SegmentsComparison(Segment s2, int k)
+        public bool SegmentsComparison(PixelGraph graph, Segment s2, int k)
         {
-            int internalDiff1 = this.InternalDifference();
-            int internalDiff2 = s2.InternalDifference();
+            int internalDiff1 = this.InternalDifference(graph);
+            int internalDiff2 = s2.InternalDifference(graph);
             int segmentsDifference = this.SegmentsDifference(s2);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
             int tao1 = k / this.count;
@@ -229,7 +229,7 @@ namespace ImageTemplate
 
                         //if the function returns true, then no merging and continue, else : merge
                         if (!channelGraph.Segments.At(neighbor.segmentID)
-                            .SegmentsComparison(
+                            .SegmentsComparison(channelGraph,
                             channelGraph.Segments.At(myNode.segmentID),
                             k))
                         {
