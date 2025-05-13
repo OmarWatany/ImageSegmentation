@@ -5,7 +5,7 @@ namespace ImageTemplate
     public struct Edge
     {
         // Should we just save color value ?
-        public Node node;
+        public (int y, int x) index;
         public byte weight;
         
         public void CalcWeight(byte pixel1, byte pixel2)
@@ -26,7 +26,7 @@ namespace ImageTemplate
             segmentID = -1;
             neighbors = new Edge[8];
             for (int i = 0; i < 8; i++) //O(1)
-                neighbors[i].node.index = (-1, -1);
+                neighbors[i].index = (-1, -1);
         }
     }
 
@@ -37,6 +37,11 @@ namespace ImageTemplate
         public Segments Segments;
 
         public int width, height;
+
+        public Node Node((int y,int x) index)
+        {
+            return this.Nodes[index.y, index.x];
+        }
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels
         {
@@ -60,7 +65,7 @@ namespace ImageTemplate
                             if (x + c < 0 || x + c >= width) continue;
                             if (r == 0 && c == 0) continue;
                             Nodes[y, x].index = (y, x);
-                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].node = Nodes[y + r, x + c];
+                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].index = (y + r, x + c);
                             Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].CalcWeight(
                                  GetColor(picture[y, x]), GetColor(picture[y + r, x + c])
                             );
