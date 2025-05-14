@@ -62,6 +62,7 @@ namespace ImageTemplate
             // build the maximum spanning tree within the segment
             for (int i = 0; i < edges.Count; i++)
             {
+                if (edges[i].node.segment != this) continue;
                 Node root1 = FindRoot(edges[i].node, parent);
                 Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
                 if (!root1.Equals(root2))
@@ -262,7 +263,7 @@ namespace ImageTemplate
 
         //Helper functions
         // Should we compare using pointer value ? I don't think so #important
-        private bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
+        public static bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
         private bool IsUnsegmented(Node node) => node.segment.ID == -1;
     }
 }
