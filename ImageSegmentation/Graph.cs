@@ -14,19 +14,22 @@ namespace ImageTemplate
         }
     }
 
-    public struct Node
+    public class Node
     {
         //public Segment segment;
-        public Edge[] neighbors;
+        public Edge[] neighbors = new Edge[8];
         public byte neighborsCount;
         public (int y, int x) index;
-        public int segmentID;
-        public void Init() //O(1)
+        //public int segmentID = -1;
+
+        public Segment segment;
+        public Node()
         {
-            segmentID = -1;
-            neighbors = new Edge[8];
             for (int i = 0; i < 8; i++) //O(1)
                 neighbors[i].index = (-1, -1);
+
+            // just is case it gets accessed before initializing
+            segment = Segment.EmptySegment;
         }
     }
 
@@ -55,7 +58,7 @@ namespace ImageTemplate
             {
                 for (int x = 0; x < width; x++)
                 {
-                    Nodes[y, x].Init();
+                    Nodes[y, x] = new Node();
                     for (int r = -1; r <= 1; r++)
                     {
                         if (y + r < 0 || y + r >= height) continue;
