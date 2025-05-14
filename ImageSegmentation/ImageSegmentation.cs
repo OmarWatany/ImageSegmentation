@@ -39,13 +39,14 @@ namespace ImageTemplate
             return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
         }
 
-        public Dictionary<(Node, Node), int> mst()
+        public Dictionary<(Node, Node), int> mst() // O(N*M)
         {
             var mst = new Dictionary<(Node, Node), int>();
             var edges = this.Edges.ToList();
 
             // Sort edges by weight (ascending for Kruskal's)
-            edges.Sort((a, b) => a.Value.CompareTo(b.Value));
+            edges.Sort((a, b) => a.Value.CompareTo(b.Value)); // O(N^2) || O(NLOGN) ?
+            // if O(N^2) replace with priority queue
 
             // Proper union-find structure
             var parent = new Dictionary<Node, Node>();
@@ -61,7 +62,7 @@ namespace ImageTemplate
                 return parent[node];
             }
 
-            foreach (var edge in edges)
+            foreach (var edge in edges) // O(E), E: number of edges
             {
                 if (mst.Count >= this.nodes.Count - 1)
                     break;
@@ -85,7 +86,7 @@ namespace ImageTemplate
             int maxEdgeWeight = -1;
 
             var mst = this.mst();
-            foreach (var edge in mst)
+            foreach (var edge in mst) // O(N)
                 if(edge.Value > maxEdgeWeight) maxEdgeWeight = edge.Value;
 
             // Return the maximum edge weight in the segment
@@ -98,13 +99,10 @@ namespace ImageTemplate
             Segment bigSegment = (this.count < s2.count) ? s2 : this;
 
             int minEdge = smallSegment.nodes.Select(n =>
-                n.neighbors.Select(ni =>
-                {
-                    if (ni.segment == bigSegment)
-                        return graph.getEdge(n, ni);
-                    else return int.MaxValue;
-                }).Min<int>()
-            ).Min<int>();
+                n.neighbors.Select(
+                    ni => (ni.segment == bigSegment) ? graph.getEdge(n, ni) : int.MaxValue
+                ).Min<int>() // O(1)
+            ).Min<int>(); // O(N), N: number of nodes in the smaller segment
 
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
@@ -147,25 +145,6 @@ namespace ImageTemplate
         {
             ID = -1
         };
-        public bool DisConnected(Node n1, Node n2)
-        {
-            visited= new bool[nodes.Count];
-            DFS(0, visited,n1,n2);
-            return visited.Any(x => !x);
-        }
-        //i: current vertex index  // j: current edge to pass
-        //This implementation of DFS checks for connectivity whe removing a certain edge
-        private void DFS(int i,bool[] visited,Node n1,Node n2)
-        {
-            visited[i] = true;
-            foreach (Node neighbor in nodes[i].neighbors)
-            {
-                if ((nodes[i] == n1 && neighbor == n2) || (nodes[i] == n2 && neighbor == n1)) continue; //Do not iterate on this edge
-
-                if ((neighbor.segment == this) && !visited[nodes.IndexOf(neighbor)])
-                    DFS(nodes.IndexOf(neighbor), visited,n1,n2);
-            }
-        }
     }
 
     public class Segments
