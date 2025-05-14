@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -14,24 +15,28 @@ namespace ImageTemplate
 
         public int ID, internalDifference;
         public List<Node> nodes;
-        public HashSet<Edge> edges; //contains all edges of the graph
-        //I chose a Hash Set because if its a list , then every edge would added twice by both vertices
-        public List<Edge> edgeList;
+        public Dictionary<(Node, Node), int> Edges; //contains all edges of the segment
         bool[] visited;
         public Segment()
         {
-            nodes = new List<Node>();
-            edges = new HashSet<Edge>();
+            this.nodes = new List<Node>();
+            this.Edges = new Dictionary<(Node, Node), int>();
         }
-        public void Add(Node node)
+        public void Add(PixelGraph graph, Node node)
         {
             node.segment = this;
             this.nodes.Add(node);
-            foreach (Edge edge in node.neighbors)
+            foreach (Node neighbor in node.neighbors)
             {
-                if(edge.node.segment==this)
-                    this.edges.Add(edge);
+                if(neighbor.segment ==this)
+                {
+                    this.Edges[PixelGraph.MakeEdgeKey(node,neighbor)]=graph.getEdge(node,neighbor);
+                }
             }
+        }
+        public int getEdge(Node n1, Node n2)
+        {
+            return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
         }
 
         public int InternalDifference(PixelGraph graph)
@@ -39,31 +44,16 @@ namespace ImageTemplate
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
 
-            // Sort edges by weight  (ascending)
-            List<Edge> e= this.edges.ToList();
-            e.Sort((a, b) => a.weight.CompareTo(b.weight));
-
             int maxEdgeWeight = -1;
-            edgeList = edges.ToList();
-            for (int j = 0; j < edgeList.Count; j++)
+            foreach (var edge in Edges)
             {
-                if (DisConnected(j) && (edgeList[j].weight > maxEdgeWeight))
-                    maxEdgeWeight = edgeList[j].weight; 
+                if (DisConnected(edge.Key.Item1, edge.Key.Item2) && edge.Value > maxEdgeWeight)
+                    maxEdgeWeight = edge.Value;
             }
 
             // Return the maximum edge weight in the segment
             return maxEdgeWeight;
         }
-
-        private Node FindRoot(Node node, Dictionary<Node, Node> parent)
-        {
-            if (!parent[node].Equals(node))
-            {
-                parent[node] = FindRoot(parent[node], parent);
-            }
-            return parent[node];
-        }
-
         public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
         {
             Segment smallSegment = (this.count < s2.count) ? this : s2;
@@ -74,12 +64,12 @@ namespace ImageTemplate
             {
                 myNode = smallSegment.nodes[i];
                 //for every node in the smaller segment:
-                for (int j = 0; j < myNode.neighborsCount; j++)
+                for (int j = 0; j < myNode.neighbors.Count; j++)
                 {
                     //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    if ((myNode.neighbors[j].segment.ID == bigSegment.ID) && (graph.getEdge(myNode,myNode.neighbors[j]) < minEdge))
                     {
-                        minEdge = myNode.neighbors[j].weight;
+                        minEdge = graph.getEdge(myNode, myNode.neighbors[j]);
                     }
                 }
             }
@@ -102,23 +92,23 @@ namespace ImageTemplate
         {
             ID = -1
         };
-        public bool DisConnected(int j)
+        public bool DisConnected(Node n1, Node n2)
         {
             visited= new bool[nodes.Count];
-            DFS(0, visited,j);
+            DFS(0, visited,n1,n2);
             return visited.Any(x => !x);
         }
         //i: current vertex index  // j: current edge to pass
         //This implementation of DFS checks for connectivity whe removing a certain edge
-        private void DFS(int i,bool[] visited,int j)
+        private void DFS(int i,bool[] visited,Node n1,Node n2)
         {
             visited[i] = true;
-            foreach (Edge edge in nodes[i].neighbors)
+            foreach (Node neighbor in nodes[i].neighbors)
             {
-                if (edgeList.IndexOf(edge) == j) continue; //Do not iterate on this edge
+                if ((nodes[i] == n1 && neighbor == n2) || (nodes[i] == n2 && neighbor == n1)) continue; //Do not iterate on this edge
 
-                if ((edge.node.segment == this) && !visited[nodes.IndexOf(edge.node)])
-                    DFS(nodes.IndexOf(edge.node), visited,j);
+                if ((neighbor.segment == this) && !visited[nodes.IndexOf(neighbor)])
+                    DFS(nodes.IndexOf(neighbor), visited,n1,n2);
             }
         }
     }
@@ -160,13 +150,13 @@ namespace ImageTemplate
 
 
 
-        public void MergeSegments(Segment s1, Segment s2)
+        public void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
         {
             Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
             Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
             for (int i = 0; i < smallSegment.count; i++)
             {
-                bigSegment.Add(smallSegment.nodes[i]);
+                bigSegment.Add(graph, smallSegment.nodes[i]);
             }
             this.segments.Remove(smallSegment); // O(n) operation
             // When smallSegment get's removed the segments after it get changed so the id
@@ -199,7 +189,7 @@ namespace ImageTemplate
             graph.Segments.Add(newSegment);
         }
 
-        public void AddToSegment(Segment segment, Node node) => segment.Add(node);
+        public void AddToSegment(PixelGraph graph, Segment segment, Node node) => segment.Add(graph,node);
 
         public void SegmentChannel(PixelGraph channelGraph, int k)
         {
@@ -213,9 +203,9 @@ namespace ImageTemplate
                     //create a segment just for this node so we can use segments comparison function
                     if (IsUnsegmented(myNode)) CreateSegment(channelGraph, myNode.index);
 
-                    for (int l = 0; l < myNode.neighborsCount; l++)
+                    for (int l = 0; l < myNode.neighbors.Count; l++)
                     {
-                        neighbor = myNode.neighbors[l].node;
+                        neighbor = myNode.neighbors[l];
 
                         if (AreSameSegment(myNode, neighbor))
                             continue;
@@ -232,7 +222,7 @@ namespace ImageTemplate
                             myNode.segment,
                             k))
                         {
-                            MergeSegments(
+                            MergeSegments(channelGraph,
                                 neighbor.segment,
                                 myNode.segment
                             );
