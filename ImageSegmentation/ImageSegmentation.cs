@@ -16,21 +16,21 @@ namespace ImageTemplate
         public List<Node> nodes;
         public HashSet<Edge> edges; //contains all edges of the graph
         //I chose a Hash Set because if its a list , then every edge would added twice by both vertices
+        public List<Edge> edgeList;
+        bool[] visited;
         public Segment()
         {
             nodes = new List<Node>();
+            edges = new HashSet<Edge>();
         }
-
-        //TODO: CalculateInternalDifference
-
         public void Add(Node node)
         {
-            //node.segmentID = this.ID;
             node.segment = this;
             this.nodes.Add(node);
             foreach (Edge edge in node.neighbors)
             {
-                this.edges.Add(edge);
+                if(edge.node.segment==this)
+                    this.edges.Add(edge);
             }
         }
 
@@ -43,28 +43,12 @@ namespace ImageTemplate
             List<Edge> e= this.edges.ToList();
             e.Sort((a, b) => a.weight.CompareTo(b.weight));
 
-            // Initialize union-find structure for Kruskal's algorithm
-            Dictionary<Node, Node> parent = new Dictionary<Node, Node>();
-            for (int i = 0; i < this.nodes.Count; i++)
+            int maxEdgeWeight = -1;
+            edgeList = edges.ToList();
+            for (int j = 0; j < edgeList.Count; j++)
             {
-                parent[this.nodes[i]] = this.nodes[i];
-            }
-
-            int maxEdgeWeight = 0;
-            // build the maximum spanning tree within the segment
-            for (int i = 0; i < edges.Count; i++)
-            {
-                if (e[i].node.segment != this) continue;
-                Node root1 = FindRoot(e[i].node, parent);
-                Node root2 = FindRoot(e[i].node.segment.nodes[0], parent);
-                if (!root1.Equals(root2))
-                {
-                    parent[root1] = root2;
-                    if (e[i].weight > maxEdgeWeight)
-                    {
-                        maxEdgeWeight = e[i].weight;
-                    }
-                }
+                if (DisConnected(j) && (edgeList[j].weight > maxEdgeWeight))
+                    maxEdgeWeight = edgeList[j].weight; 
             }
 
             // Return the maximum edge weight in the segment
@@ -118,6 +102,25 @@ namespace ImageTemplate
         {
             ID = -1
         };
+        public bool DisConnected(int j)
+        {
+            visited= new bool[nodes.Count];
+            DFS(0, visited,j);
+            return visited.Any(x => !x);
+        }
+        //i: current vertex index  // j: current edge to pass
+        //This implementation of DFS checks for connectivity whe removing a certain edge
+        private void DFS(int i,bool[] visited,int j)
+        {
+            visited[i] = true;
+            foreach (Edge edge in nodes[i].neighbors)
+            {
+                if (edgeList.IndexOf(edge) == j) continue; //Do not iterate on this edge
+
+                if ((edge.node.segment == this) && !visited[nodes.IndexOf(edge.node)])
+                    DFS(nodes.IndexOf(edge.node), visited,j);
+            }
+        }
     }
 
     public class Segments
@@ -188,7 +191,7 @@ namespace ImageTemplate
 
             Segment newSegment = new Segment
             {
-                ID = graph.Segments.Count,
+                ID = ++graph.segmentIdIncrement,
                 nodes = new List<Node> { graph.Nodes[index.y, index.x] }
             };
             graph.Nodes[index.y, index.x].segment = newSegment;
@@ -246,7 +249,7 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    int id = graph.Nodes[i, j].segment.ID;
+                    int id = graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment);
                     RGBPixel c = colors[id];
                     graph.Picture[i, j] = c;
                 }

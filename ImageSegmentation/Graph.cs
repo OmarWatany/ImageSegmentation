@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 namespace ImageTemplate
 {
     public struct Edge
@@ -41,7 +40,7 @@ namespace ImageTemplate
         public Node[,] Nodes;
         public RGBPixel[,] Picture;
         public Segments Segments;
-
+        public int segmentIdIncrement = -1;//we have to use that because segments.count is variable , so two segments can have the same id
         public int width, height;
         public Func<RGBPixel,byte> GetColor;
 
