@@ -94,33 +94,17 @@ namespace ImageTemplate
 
         public int SegmentsDifference(PixelGraph graph, Segment s2,int z) //O(N) , N: number of nodes in the smaller segment
         {
-            int minEdge = int.MaxValue;
+            Segment smallSegment = (this.count < s2.count) ? this : s2;
+            Segment bigSegment = (this.count < s2.count) ? s2 : this;
 
-            Segment s = this;
-            foreach (var node in s.nodes)
-            {
-                foreach (Node neighbor in node.neighbors)
+            int minEdge = smallSegment.nodes.Select(n =>
+                n.neighbors.Select(ni =>
                 {
-                    if (neighbor.segment == s2)
-                    {
-                        int w = graph.getEdge(node, neighbor);
-                        if (w < minEdge) minEdge = w;
-                    }
-                }
-            }
-
-            s = s2;
-            foreach (var node in s.nodes)
-            {
-                foreach (Node neighbor in node.neighbors)
-                {
-                    if (neighbor.segment == this)
-                    {
-                        int w = graph.getEdge(node, neighbor);
-                        if (w < minEdge) minEdge = w;
-                    }
-                }
-            }
+                    if (ni.segment == bigSegment)
+                        return graph.getEdge(n, ni);
+                    else return int.MaxValue;
+                }).Min<int>()
+            ).Min<int>();
 
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
@@ -151,7 +135,7 @@ namespace ImageTemplate
         {
             int internalDiff1 = this.InternalDifference();
             int internalDiff2 = s2.InternalDifference();
-            int segmentsDifference = this.SegmentsDifference(graph, s2,0);
+            int segmentsDifference = this.SegmentsDifference(graph, s2, 0);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
             int tao1 = k / this.count;
             int tao2 = k / s2.count;
