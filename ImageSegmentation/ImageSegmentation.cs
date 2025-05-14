@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -13,7 +14,8 @@ namespace ImageTemplate
 
         public int ID, internalDifference;
         public List<Node> nodes;
-
+        public HashSet<Edge> edges; //contains all edges of the graph
+        //I chose a Hash Set because if its a list , then every edge would added twice by both vertices
         public Segment()
         {
             nodes = new List<Node>();
@@ -26,6 +28,10 @@ namespace ImageTemplate
             //node.segmentID = this.ID;
             node.segment = this;
             this.nodes.Add(node);
+            foreach (Edge edge in node.neighbors)
+            {
+                this.edges.Add(edge);
+            }
         }
 
         public int InternalDifference(PixelGraph graph)
@@ -33,23 +39,9 @@ namespace ImageTemplate
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
 
-            List<Edge> edges = new List<Edge>();
-            // Collect all edges where both nodes are in the same segment
-            for (int i = 0; i < this.nodes.Count; i++)
-            {
-                Node node = this.nodes[i];
-                for (int j = 0; j < node.neighborsCount; j++) 
-                {
-                    Edge edge = node.neighbors[j];
-                    if (edge.node.segment.ID == this.ID)
-                    {
-                        edges.Add(edge);
-                    }
-                }
-            }
-
             // Sort edges by weight  (ascending)
-            edges.Sort((a, b) => a.weight.CompareTo(b.weight));
+            List<Edge> e= this.edges.ToList();
+            e.Sort((a, b) => a.weight.CompareTo(b.weight));
 
             // Initialize union-find structure for Kruskal's algorithm
             Dictionary<Node, Node> parent = new Dictionary<Node, Node>();
@@ -62,15 +54,15 @@ namespace ImageTemplate
             // build the maximum spanning tree within the segment
             for (int i = 0; i < edges.Count; i++)
             {
-                if (edges[i].node.segment != this) continue;
-                Node root1 = FindRoot(edges[i].node, parent);
-                Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
+                if (e[i].node.segment != this) continue;
+                Node root1 = FindRoot(e[i].node, parent);
+                Node root2 = FindRoot(e[i].node.segment.nodes[0], parent);
                 if (!root1.Equals(root2))
                 {
                     parent[root1] = root2;
-                    if (edges[i].weight > maxEdgeWeight)
+                    if (e[i].weight > maxEdgeWeight)
                     {
-                        maxEdgeWeight = edges[i].weight;
+                        maxEdgeWeight = e[i].weight;
                     }
                 }
             }
