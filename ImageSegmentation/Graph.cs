@@ -5,7 +5,7 @@ namespace ImageTemplate
     public struct Edge
     {
         // Should we just save color value ?
-        public (int y, int x) index;
+        public Node node;
         public byte weight;
         
         public void CalcWeight(byte pixel1, byte pixel2)
@@ -14,20 +14,26 @@ namespace ImageTemplate
         }
     }
 
-    public struct Node
+    public class Node
     {
         //public Segment segment;
-        public Edge[] neighbors;
+        public Edge[] neighbors = new Edge[8];
         public byte neighborsCount;
         public (int y, int x) index;
-        public int segmentID;
-        public void Init() //O(1)
+
+        public Segment segment;
+        public Node()
         {
-            segmentID = -1;
-            neighbors = new Edge[8];
+            // just is case they gets accessed before initializing
             for (int i = 0; i < 8; i++) //O(1)
-                neighbors[i].index = (-1, -1);
+                neighbors[i].node = EmptyNode;
+            segment = Segment.EmptySegment;
         }
+
+        public static Node EmptyNode = new Node
+        {
+            index = (-1,-1),
+        };
     }
 
     public class PixelGraph
@@ -37,6 +43,7 @@ namespace ImageTemplate
         public Segments Segments;
 
         public int width, height;
+        public Func<RGBPixel,byte> GetColor;
 
         public Node Node((int y,int x) index)
         {
@@ -50,22 +57,27 @@ namespace ImageTemplate
             this.width = picture.GetLength(1);
             this.Nodes = new Node[picture.GetLength(0), picture.GetLength(1)];
             this.Segments = new Segments();
+            this.GetColor = GetColor; // Maybe we could use it 
 
             for (int y = 0; y < height; y++)
-            {
                 for (int x = 0; x < width; x++)
+                    Nodes[y, x] = new Node();
+
+            for (int y = 0; y < height; y++) // O(W*H)
+            {
+                for (int x = 0; x < width; x++) // O(N)
                 {
-                    Nodes[y, x].Init();
-                    for (int r = -1; r <= 1; r++)
+                    for (int r = -1; r <= 1; r++) // O(1)
                     {
                         if (y + r < 0 || y + r >= height) continue;
-                        for (int c = -1; c <= 1; c++)
+                        for (int c = -1; c <= 1; c++) // O(1)
                         {
                             // traverse the surrounding cells
                             if (x + c < 0 || x + c >= width) continue;
                             if (r == 0 && c == 0) continue;
+                            Nodes[y, x] = Nodes[y, x];
                             Nodes[y, x].index = (y, x);
-                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].index = (y + r, x + c);
+                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].node = Nodes[y + r, x + c];
                             Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].CalcWeight(
                                  GetColor(picture[y, x]), GetColor(picture[y + r, x + c])
                             );

@@ -4,23 +4,27 @@ using System.Collections.Generic;
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
 {
-    public struct Segment
+    public class Segment
     {
-        public int Count
+        public int count
         {
             get => nodes.Count;
         }
 
-        // TODO: Remove it
-        public int count; // NOTE: obsolete, Don't use it
-
         public int ID, internalDifference;
         public List<Node> nodes;
+
+        public Segment()
+        {
+            nodes = new List<Node>();
+        }
+
         //TODO: CalculateInternalDifference
 
         public void Add(Node node)
         {
-            node.segmentID = this.ID;
+            //node.segmentID = this.ID;
+            node.segment = this;
             this.nodes.Add(node);
         }
 
@@ -34,10 +38,10 @@ namespace ImageTemplate
             for (int i = 0; i < this.nodes.Count; i++)
             {
                 Node node = this.nodes[i];
-                for (int j = 0; j < node.neighbors.Length; j++)
+                for (int j = 0; j < node.neighborsCount; j++) 
                 {
                     Edge edge = node.neighbors[j];
-                    if (graph.Node(edge.index).segmentID == this.ID)
+                    if (edge.node.segment.ID == this.ID)
                     {
                         edges.Add(edge);
                     }
@@ -58,8 +62,8 @@ namespace ImageTemplate
             // build the maximum spanning tree within the segment
             for (int i = 0; i < edges.Count; i++)
             {
-                Node root1 = FindRoot(graph.Node(edges[i].index), parent);
-                Node root2 = FindRoot(graph.Segments.segments[graph.Node(edges[i].index).segmentID].nodes[0], parent);
+                Node root1 = FindRoot(edges[i].node, parent);
+                Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
                 if (!root1.Equals(root2))
                 {
                     parent[root1] = root2;
@@ -96,7 +100,7 @@ namespace ImageTemplate
                 for (int j = 0; j < myNode.neighborsCount; j++)
                 {
                     //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((graph.Node(myNode.neighbors[j].index).segmentID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
                     {
                         minEdge = myNode.neighbors[j].weight;
                     }
@@ -117,6 +121,10 @@ namespace ImageTemplate
             return (segmentsDifference > MInt);
         }
 
+        public static Segment EmptySegment = new Segment
+        {
+            ID = -1
+        };
     }
 
     public class Segments
@@ -164,7 +172,8 @@ namespace ImageTemplate
             {
                 bigSegment.Add(smallSegment.nodes[i]);
             }
-            this.segments.Remove(smallSegment);
+            this.segments.Remove(smallSegment); // O(n) operation
+            // When smallSegment get's removed the segments after it get changed so the id
         }
 
         // NOTE: Probably class Segments' operation
@@ -187,20 +196,14 @@ namespace ImageTemplate
             Segment newSegment = new Segment
             {
                 ID = graph.Segments.Count,
-                count = 1,
-                nodes = new List<Node> { graph.Nodes[index.y,index.x] }
+                nodes = new List<Node> { graph.Nodes[index.y, index.x] }
             };
-            graph.Nodes[index.y, index.x].segmentID = newSegment.ID;
+            graph.Nodes[index.y, index.x].segment = newSegment;
 
             graph.Segments.Add(newSegment);
         }
 
-        public void AddToSegment(Segment segment, Node node)
-        {
-            node.segmentID = segment.ID;
-            segment.count++;
-            segment.nodes.Add(node);
-        }
+        public void AddToSegment(Segment segment, Node node) => segment.Add(node);
 
         public void SegmentChannel(PixelGraph channelGraph, int k)
         {
@@ -216,7 +219,7 @@ namespace ImageTemplate
 
                     for (int l = 0; l < myNode.neighborsCount; l++)
                     {
-                        neighbor = channelGraph.Node(myNode.neighbors[l].index);
+                        neighbor = myNode.neighbors[l].node;
 
                         if (AreSameSegment(myNode, neighbor))
                             continue;
@@ -227,14 +230,15 @@ namespace ImageTemplate
                         }
 
                         //if the function returns true, then no merging and continue, else : merge
-                        if (!channelGraph.Segments.At(neighbor.segmentID)
+                        // we should stop getting segments using it's ID because its different from it's place #important
+                        if (!neighbor.segment 
                             .SegmentsComparison(channelGraph,
-                            channelGraph.Segments.At(myNode.segmentID),
+                            myNode.segment,
                             k))
                         {
                             MergeSegments(
-                                channelGraph.Segments.At(neighbor.segmentID),
-                                channelGraph.Segments.At(myNode.segmentID)
+                                neighbor.segment,
+                                myNode.segment
                             );
                         }
                     }
@@ -249,15 +253,16 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    int id = graph.Nodes[i, j].segmentID;
-                    RGBPixel c= colors[id];
+                    int id = graph.Nodes[i, j].segment.ID;
+                    RGBPixel c = colors[id];
                     graph.Picture[i, j] = c;
                 }
             }
         }
 
         //Helper functions
-        private bool AreSameSegment(Node a, Node b) => a.segmentID == b.segmentID;
-        private bool IsUnsegmented(Node node) => node.segmentID == -1;
+        // Should we compare using pointer value ? I don't think so #important
+        private bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
+        private bool IsUnsegmented(Node node) => node.segment.ID == -1;
     }
 }
