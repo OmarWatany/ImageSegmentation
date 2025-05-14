@@ -41,7 +41,7 @@ namespace ImageTemplate
                 for (int j = 0; j < node.neighborsCount; j++) 
                 {
                     Edge edge = node.neighbors[j];
-                    if (graph.Node(edge.index).segment.ID == this.ID)
+                    if (edge.node.segment.ID == this.ID)
                     {
                         edges.Add(edge);
                     }
@@ -62,8 +62,8 @@ namespace ImageTemplate
             // build the maximum spanning tree within the segment
             for (int i = 0; i < edges.Count; i++)
             {
-                Node root1 = FindRoot(graph.Node(edges[i].index), parent);
-                Node root2 = FindRoot(graph.Node(edges[i].index).segment.nodes[0], parent);
+                Node root1 = FindRoot(edges[i].node, parent);
+                Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
                 if (!root1.Equals(root2))
                 {
                     parent[root1] = root2;
@@ -100,7 +100,7 @@ namespace ImageTemplate
                 for (int j = 0; j < myNode.neighborsCount; j++)
                 {
                     //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((graph.Node(myNode.neighbors[j].index).segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
+                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
                     {
                         minEdge = myNode.neighbors[j].weight;
                     }
@@ -219,7 +219,7 @@ namespace ImageTemplate
 
                     for (int l = 0; l < myNode.neighborsCount; l++)
                     {
-                        neighbor = channelGraph.Node(myNode.neighbors[l].index);
+                        neighbor = myNode.neighbors[l].node;
 
                         if (AreSameSegment(myNode, neighbor))
                             continue;
