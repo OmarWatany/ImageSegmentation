@@ -83,14 +83,9 @@ namespace ImageTemplate
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
 
-            int maxEdgeWeight = -1;
-
             var mst = this.mst();
-            foreach (var edge in mst) // O(N)
-                if(edge.Value > maxEdgeWeight) maxEdgeWeight = edge.Value;
-
             // Return the maximum edge weight in the segment
-            return maxEdgeWeight;
+            return mst.Select(e => e.Value).Max<int>();
         }
 
         public int SegmentsDifference(PixelGraph graph, Segment s2,int z) //O(N) , N: number of nodes in the smaller segment
@@ -101,8 +96,8 @@ namespace ImageTemplate
             int minEdge = smallSegment.nodes.Select(n =>
                 n.neighbors.Select(
                     ni => (ni.segment == bigSegment) ? graph.getEdge(n, ni) : int.MaxValue
-                ).Min<int>() // O(1)
-            ).Min<int>(); // O(N), N: number of nodes in the smaller segment
+                ).Min<int>() // O(1) //returns the min edge connecting from a node to the other segment if found
+            ).Min<int>(); // O(N), N: number of nodes in the smaller segment //returns the min edge connecting to the other segment from all minimums
 
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
@@ -112,17 +107,18 @@ namespace ImageTemplate
             Segment smallSegment = (this.count < s2.count) ? this : s2;
             Segment bigSegment = (this.count < s2.count) ? s2 : this;
             Node myNode;
-            int minEdge = int.MaxValue;
+            int minEdge = int.MaxValue,edge;
             for (int i = 0; i < smallSegment.count; i++)
             {
                 myNode = smallSegment.nodes[i];
                 //for every node in the smaller segment:
                 for (int j = 0; j < myNode.neighbors.Count; j++)
                 {
+                    edge = graph.getEdge(myNode, myNode.neighbors[j]);
                     //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((myNode.neighbors[j].segment.ID == bigSegment.ID) && (graph.getEdge(myNode,myNode.neighbors[j]) < minEdge))
+                    if ((myNode.neighbors[j].segment.ID == bigSegment.ID) && (edge < minEdge))
                     {
-                        minEdge = graph.getEdge(myNode, myNode.neighbors[j]);
+                        minEdge = edge;
                     }
                 }
             }
