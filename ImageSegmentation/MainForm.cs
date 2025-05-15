@@ -29,28 +29,35 @@ namespace ImageTemplate
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 9, 0.8); //what filter size to use? //O(N^2)
+                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
                 RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
-                RedGraph.Segments.SegmentChannel(RedGraph,1);
-                RedGraph.Segments.ColorSegments(RedGraph);
-                ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
 
                 //BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 //GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
             }
+            textBox1.Text = "1";
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
         }
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
-            double sigma = double.Parse(txtGaussSigma.Text);
-            int maskSize = (int)nudMaskSize.Value ;
-            ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
+            RedGraph.Segments.SegmentChannel(RedGraph, int.Parse(textBox1.Text));
+            RedGraph.Segments.ColorSegments(RedGraph);
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+        
+        private void textBox1_TextChanged(object sender, EventArgs e)
         {
 
         }

@@ -2,38 +2,17 @@
 using System.Collections.Generic;
 namespace ImageTemplate
 {
-    public struct Edge
-    {
-        // Should we just save color value ?
-        public Node node;
-        public byte weight;
-        
-        public void CalcWeight(byte pixel1, byte pixel2)
-        {
-            weight = pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
-        }
-    }
-
     public class Node
     {
         //public Segment segment;
-        public Edge[] neighbors = new Edge[8];
-        public byte neighborsCount;
+        public List<Node> neighbors;
         public (int y, int x) index;
-
         public Segment segment;
         public Node()
         {
-            // just is case they gets accessed before initializing
-            for (int i = 0; i < 8; i++) //O(1)
-                neighbors[i].node = EmptyNode;
+            neighbors = new List<Node>();
             segment = Segment.EmptySegment;
         }
-
-        public static Node EmptyNode = new Node
-        {
-            index = (-1,-1),
-        };
     }
 
     public class PixelGraph
@@ -41,13 +20,25 @@ namespace ImageTemplate
         public Node[,] Nodes;
         public RGBPixel[,] Picture;
         public Segments Segments;
-
         public int width, height;
-        public Func<RGBPixel,byte> GetColor;
-
-        public Node Node((int y,int x) index)
+        public Func<RGBPixel, byte> GetColor;
+        public Dictionary<(Node, Node), int> Edges;
+        public Node Node((int y, int x) index)
         {
             return this.Nodes[index.y, index.x];
+        }
+        public static (Node, Node) MakeEdgeKey(Node a, Node b)
+        {
+            // Compare by index
+            return (a.index.CompareTo(b.index) <= 0) ? (a, b) : (b, a);
+        }
+        public int getEdge(Node n1,Node n2)
+        {
+            return this.Edges[MakeEdgeKey(n1, n2)];
+        }
+        public void CalcWeight(Node n1, Node n2,byte pixel1, byte pixel2)
+        {
+            Edges[MakeEdgeKey(n1, n2)] = pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
         }
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels
@@ -58,6 +49,7 @@ namespace ImageTemplate
             this.Nodes = new Node[picture.GetLength(0), picture.GetLength(1)];
             this.Segments = new Segments();
             this.GetColor = GetColor; // Maybe we could use it 
+            this.Edges = new Dictionary<(Node, Node), int>();
 
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
@@ -75,13 +67,11 @@ namespace ImageTemplate
                             // traverse the surrounding cells
                             if (x + c < 0 || x + c >= width) continue;
                             if (r == 0 && c == 0) continue;
-                            Nodes[y, x] = Nodes[y, x];
                             Nodes[y, x].index = (y, x);
-                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].node = Nodes[y + r, x + c];
-                            Nodes[y, x].neighbors[Nodes[y, x].neighborsCount].CalcWeight(
+                            Nodes[y, x].neighbors.Add(Nodes[y + r, x + c]);
+                            CalcWeight(Nodes[y,x], Nodes[y + r, x + c],
                                  GetColor(picture[y, x]), GetColor(picture[y + r, x + c])
                             );
-                            Nodes[y, x].neighborsCount++;
                         }
                     }
                 }

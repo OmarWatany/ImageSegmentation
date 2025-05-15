@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -11,113 +13,103 @@ namespace ImageTemplate
             get => nodes.Count;
         }
 
-        public int ID, internalDifference;
+        public int ID;
         public List<Node> nodes;
-
+        public Dictionary<(Node, Node), int> Edges; //contains all edges of the segment
         public Segment()
         {
-            nodes = new List<Node>();
+            this.nodes = new List<Node>();
+            this.Edges = new Dictionary<(Node, Node), int>();
         }
-
-        //TODO: CalculateInternalDifference
-
-        public void Add(Node node)
+        public void Add(PixelGraph graph, Node node)
         {
-            //node.segmentID = this.ID;
             node.segment = this;
             this.nodes.Add(node);
+            foreach (Node neighbor in node.neighbors)
+            {
+                if(neighbor.segment == this)
+                {
+                    this.Edges[PixelGraph.MakeEdgeKey(node,neighbor)] = graph.getEdge(node,neighbor);
+                }
+            }
+        }
+        public int getEdge(Node n1, Node n2)
+        {
+            return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
         }
 
-        public int InternalDifference(PixelGraph graph)
+        public Dictionary<(Node, Node), int> mst() // O(N*M)
+        {
+            var mst = new Dictionary<(Node, Node), int>();
+            var edges = this.Edges.ToList();
+
+            // Sort edges by weight (ascending for Kruskal's)
+            edges.Sort((a, b) => a.Value.CompareTo(b.Value)); // O(N^2) || O(NLOGN) ?
+            // if O(N^2) replace with priority queue
+
+            // Proper union-find structure
+            var parent = new Dictionary<Node, Node>();
+            foreach (var node in this.nodes)
+            {
+                parent[node] = node; // Each node is its own parent initially
+            }
+
+            Node Find(Node node)
+            {
+                if (parent[node] != node)
+                    parent[node] = Find(parent[node]); // Path compression
+                return parent[node];
+            }
+
+            foreach (var edge in edges) // O(E), E: number of edges
+            {
+                if (mst.Count >= this.nodes.Count - 1)
+                    break;
+
+                var root1 = Find(edge.Key.Item1);
+                var root2 = Find(edge.Key.Item2);
+                if (root1 == root2) continue;
+
+                mst.Add(edge.Key, edge.Value);
+                parent[root2] = root1; // Union
+            }
+
+            return mst;
+        }
+
+        public int InternalDifference()
         {
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
 
-            List<Edge> edges = new List<Edge>();
-            // Collect all edges where both nodes are in the same segment
-            for (int i = 0; i < this.nodes.Count; i++)
-            {
-                Node node = this.nodes[i];
-                for (int j = 0; j < node.neighborsCount; j++) 
-                {
-                    Edge edge = node.neighbors[j];
-                    if (edge.node.segment.ID == this.ID)
-                    {
-                        edges.Add(edge);
-                    }
-                }
-            }
-
-            // Sort edges by weight  (ascending)
-            edges.Sort((a, b) => a.weight.CompareTo(b.weight));
-
-            // Initialize union-find structure for Kruskal's algorithm
-            Dictionary<Node, Node> parent = new Dictionary<Node, Node>();
-            for (int i = 0; i < this.nodes.Count; i++)
-            {
-                parent[this.nodes[i]] = this.nodes[i];
-            }
-
-            int maxEdgeWeight = 0;
-            // build the maximum spanning tree within the segment
-            for (int i = 0; i < edges.Count; i++)
-            {
-                Node root1 = FindRoot(edges[i].node, parent);
-                Node root2 = FindRoot(edges[i].node.segment.nodes[0], parent);
-                if (!root1.Equals(root2))
-                {
-                    parent[root1] = root2;
-                    if (edges[i].weight > maxEdgeWeight)
-                    {
-                        maxEdgeWeight = edges[i].weight;
-                    }
-                }
-            }
-
+            var mst = this.mst();
             // Return the maximum edge weight in the segment
-            return maxEdgeWeight;
-        }
-
-        private Node FindRoot(Node node, Dictionary<Node, Node> parent)
-        {
-            if (!parent[node].Equals(node))
-            {
-                parent[node] = FindRoot(parent[node], parent);
-            }
-            return parent[node];
+            return mst.Select(e => e.Value).Max<int>();
         }
 
         public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
         {
             Segment smallSegment = (this.count < s2.count) ? this : s2;
             Segment bigSegment = (this.count < s2.count) ? s2 : this;
-            Node myNode;
-            int minEdge = int.MaxValue;
-            for (int i = 0; i < smallSegment.count; i++)
-            {
-                myNode = smallSegment.nodes[i];
-                //for every node in the smaller segment:
-                for (int j = 0; j < myNode.neighborsCount; j++)
-                {
-                    //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((myNode.neighbors[j].node.segment.ID == bigSegment.ID) && (myNode.neighbors[j].weight < minEdge))
-                    {
-                        minEdge = myNode.neighbors[j].weight;
-                    }
-                }
-            }
+
+            int minEdge = smallSegment.nodes.Select(n =>
+                n.neighbors.Select(
+                    ni => (ni.segment == bigSegment) ? graph.getEdge(n, ni) : int.MaxValue
+                ).Min<int>() // O(1) //returns the min edge connecting from a node to the other segment if found
+            ).Min<int>(); // O(N), N: number of nodes in the smaller segment //returns the min edge connecting to the other segment from all minimums
+
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
 
         public bool SegmentsComparison(PixelGraph graph, Segment s2, int k)
         {
-            int internalDiff1 = this.InternalDifference(graph);
-            int internalDiff2 = s2.InternalDifference(graph);
+            int internalDiff1 = this.InternalDifference();
+            int internalDiff2 = s2.InternalDifference();
             int segmentsDifference = this.SegmentsDifference(graph, s2);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
-            int tao1 = k / this.count;
-            int tao2 = k / s2.count;
-            int MInt = Math.Min(internalDiff1 + tao1, internalDiff2 + tao2);
+            double tao1 = (double)k / this.count;
+            double tao2 = (double)k / s2.count;
+            double MInt = Math.Ceiling(Math.Min(internalDiff1 + tao1, internalDiff2 + tao2));
             return (segmentsDifference > MInt);
         }
 
@@ -129,6 +121,10 @@ namespace ImageTemplate
 
     public class Segments
     {
+
+        private int segmentIdIncrement = -1;
+        public int NewSegmentId => ++segmentIdIncrement;
+        //we have to use that because segments.count is variable , so two segments can have the same id
 
         public List<Segment> segments;
         public int Count
@@ -164,13 +160,13 @@ namespace ImageTemplate
 
 
 
-        public void MergeSegments(Segment s1, Segment s2)
+        public void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
         {
             Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
             Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
             for (int i = 0; i < smallSegment.count; i++)
             {
-                bigSegment.Add(smallSegment.nodes[i]);
+                bigSegment.Add(graph, smallSegment.nodes[i]);
             }
             this.segments.Remove(smallSegment); // O(n) operation
             // When smallSegment get's removed the segments after it get changed so the id
@@ -190,12 +186,11 @@ namespace ImageTemplate
         }
         // TODO: Find Intersection between red, blue and green
 
-        public void CreateSegment(PixelGraph graph, (int y, int x) index)
+        public void CreateSegment(PixelGraph graph, (int y,int x) index)
         {
-
             Segment newSegment = new Segment
             {
-                ID = graph.Segments.Count,
+                ID = NewSegmentId,
                 nodes = new List<Node> { graph.Nodes[index.y, index.x] }
             };
             graph.Nodes[index.y, index.x].segment = newSegment;
@@ -203,7 +198,18 @@ namespace ImageTemplate
             graph.Segments.Add(newSegment);
         }
 
-        public void AddToSegment(Segment segment, Node node) => segment.Add(node);
+        public void CreateSegment(Node node)
+        {
+            Segment newSegment = new Segment
+            {
+                ID = NewSegmentId,
+                nodes = new List<Node> { node }
+            };
+            node.segment = newSegment;
+            this.Add(newSegment);
+        }
+
+        public void AddToSegment(PixelGraph graph, Segment segment, Node node) => segment.Add(graph,node);
 
         public void SegmentChannel(PixelGraph channelGraph, int k)
         {
@@ -215,18 +221,18 @@ namespace ImageTemplate
                     myNode = channelGraph.Nodes[i, j];
 
                     //create a segment just for this node so we can use segments comparison function
-                    if (IsUnsegmented(myNode)) CreateSegment(channelGraph, myNode.index);
+                    if (IsUnsegmented(myNode)) CreateSegment(myNode);
 
-                    for (int l = 0; l < myNode.neighborsCount; l++)
+                    for (int l = 0; l < myNode.neighbors.Count; l++)
                     {
-                        neighbor = myNode.neighbors[l].node;
+                        neighbor = myNode.neighbors[l];
 
                         if (AreSameSegment(myNode, neighbor))
                             continue;
 
                         if (IsUnsegmented(neighbor))
                         {
-                            CreateSegment(channelGraph, neighbor.index);
+                            CreateSegment(neighbor);
                         }
 
                         //if the function returns true, then no merging and continue, else : merge
@@ -236,7 +242,7 @@ namespace ImageTemplate
                             myNode.segment,
                             k))
                         {
-                            MergeSegments(
+                            MergeSegments(channelGraph,
                                 neighbor.segment,
                                 myNode.segment
                             );
@@ -253,7 +259,7 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    int id = graph.Nodes[i, j].segment.ID;
+                    int id = graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment);
                     RGBPixel c = colors[id];
                     graph.Picture[i, j] = c;
                 }
@@ -262,7 +268,7 @@ namespace ImageTemplate
 
         //Helper functions
         // Should we compare using pointer value ? I don't think so #important
-        private bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
+        public static bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
         private bool IsUnsegmented(Node node) => node.segment.ID == -1;
     }
 }
