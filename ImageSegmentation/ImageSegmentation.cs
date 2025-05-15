@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -260,9 +261,31 @@ namespace ImageTemplate
             }
         }
 
+        public string GetSegmentsInfo()
+        {
+            int numSegments = segments.Count;
+
+            List<int> sizes = new List<int>();
+            foreach (var segment in segments)
+            {
+                sizes.Add(segment.count);
+            }
+
+            sizes.Sort((a, b) => b.CompareTo(a));
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Number of segments: {numSegments}");
+            foreach (int size in sizes)
+            {
+                sb.AppendLine(size.ToString());
+            }
+
+            return sb.ToString();
+        }
+
         //Helper functions
         // Should we compare using pointer value ? I don't think so #important
         private bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
         private bool IsUnsegmented(Node node) => node.segment.ID == -1;
-    }
+    }   
 }
