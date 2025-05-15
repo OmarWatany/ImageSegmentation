@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -109,7 +108,7 @@ namespace ImageTemplate
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
             double tao1 = (double)k / this.count;
             double tao2 = (double)k / s2.count;
-            double MInt = Math.Ceiling(Math.Min(internalDiff1 + tao1, internalDiff2 + tao2));
+            double MInt = Math.Ceiling(Math.Min(internalDiff1 + tao1, internalDiff2 + tao2));//DEBATEBLE
             return (segmentsDifference > MInt);
         }
 

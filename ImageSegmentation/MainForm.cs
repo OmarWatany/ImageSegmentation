@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace ImageTemplate
@@ -29,8 +25,8 @@ namespace ImageTemplate
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
-                RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
+                //ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
+                RedGraph = new PixelGraph(this.ImageMatrix,x => x.blue);
 
                 //BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 //GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
@@ -42,8 +38,16 @@ namespace ImageTemplate
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
+            Stopwatch timer = Stopwatch.StartNew();
             RedGraph.Segments.SegmentChannel(RedGraph, int.Parse(textBox1.Text));
             RedGraph.Segments.ColorSegments(RedGraph);
+            timer.Stop();
+
+            long time = timer.ElapsedMilliseconds;
+            Console.WriteLine("number of segments:" + RedGraph.Segments.segments.Count);
+            Console.WriteLine("Milliseconds taken to segment the image:" + time);
+            Console.WriteLine("Seconds taken to segment the image:" + time/1000);
+
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
         }
 
