@@ -16,7 +16,6 @@ namespace ImageTemplate
         public int ID;
         public List<Node> nodes;
         public Dictionary<(Node, Node), int> Edges; //contains all edges of the segment
-        bool[] visited;
         public Segment()
         {
             this.nodes = new List<Node>();
@@ -88,7 +87,7 @@ namespace ImageTemplate
             return mst.Select(e => e.Value).Max<int>();
         }
 
-        public int SegmentsDifference(PixelGraph graph, Segment s2,int z) //O(N) , N: number of nodes in the smaller segment
+        public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
         {
             Segment smallSegment = (this.count < s2.count) ? this : s2;
             Segment bigSegment = (this.count < s2.count) ? s2 : this;
@@ -102,38 +101,15 @@ namespace ImageTemplate
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
 
-        public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
-        {
-            Segment smallSegment = (this.count < s2.count) ? this : s2;
-            Segment bigSegment = (this.count < s2.count) ? s2 : this;
-            Node myNode;
-            int minEdge = int.MaxValue,edge;
-            for (int i = 0; i < smallSegment.count; i++)
-            {
-                myNode = smallSegment.nodes[i];
-                //for every node in the smaller segment:
-                for (int j = 0; j < myNode.neighbors.Count; j++)
-                {
-                    edge = graph.getEdge(myNode, myNode.neighbors[j]);
-                    //check if any of its neighbors are from the other segment, and if their edge is  smaller than the current minimum
-                    if ((myNode.neighbors[j].segment.ID == bigSegment.ID) && (edge < minEdge))
-                    {
-                        minEdge = edge;
-                    }
-                }
-            }
-            return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
-        }
-
         public bool SegmentsComparison(PixelGraph graph, Segment s2, int k)
         {
             int internalDiff1 = this.InternalDifference();
             int internalDiff2 = s2.InternalDifference();
-            int segmentsDifference = this.SegmentsDifference(graph, s2, 0);
+            int segmentsDifference = this.SegmentsDifference(graph, s2);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
-            int tao1 = k / this.count;
-            int tao2 = k / s2.count;
-            int MInt = Math.Min(internalDiff1 + tao1, internalDiff2 + tao2);
+            double tao1 = (double)k / this.count;
+            double tao2 = (double)k / s2.count;
+            double MInt = Math.Ceiling(Math.Min(internalDiff1 + tao1, internalDiff2 + tao2));
             return (segmentsDifference > MInt);
         }
 
