@@ -153,7 +153,7 @@ namespace ImageTemplate
 
         public Segments()
         {
-            segments = new List<Segment>();
+            segments = new List<Segment>(30);
         }
 
         // return new segment's ID

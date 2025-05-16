@@ -11,7 +11,7 @@ namespace ImageTemplate
         public Segment finalsegment;
         public Node()
         {
-            neighbors = new List<Node>();
+            neighbors = new List<Node>(8);
             segment = Segment.EmptySegment;
             finalsegment = Segment.EmptySegment;
         }
