@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -75,13 +76,15 @@ namespace ImageTemplate
             //    parent[root2] = root1; // Union
             //}
 
+            //Node root1;
+            //Node root2;
             foreach (var edge in edges) // O(E), E: number of edges
             {
                 if (mst.Count >= this.nodes.Count - 1)
                     break;
 
-                var root1 = Find(edge.Key.Item1);
-                var root2 = Find(edge.Key.Item2);
+            var    root1 = Find(edge.Key.Item1);
+            var    root2 = Find(edge.Key.Item2);
                 if (root1 == root2) continue;
 
                 mst.Add(edge.Key, edge.Value);
@@ -101,6 +104,8 @@ namespace ImageTemplate
         {
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
+            if(this==Segments.EmptySegment1) { Console.WriteLine("1"); }
+            else if(this==Segments.EmptySegment2) { Console.WriteLine("2"); }
             var mst = this.mst();
             // Return the maximum edge weight in the segment
             return mst.Max(e => e.Value);
@@ -150,7 +155,7 @@ namespace ImageTemplate
         {
             get => segments.Count;
         }
-
+        public static Segment EmptySegment1=new Segment(), EmptySegment2=new Segment();
         public Segments()
         {
             segments = new List<Segment>(30);
@@ -181,6 +186,31 @@ namespace ImageTemplate
 
         public void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
         {
+            if (s1==EmptySegment1 && s2==EmptySegment2)
+            {
+                Node n1=EmptySegment1.nodes[0];
+                Node n2=EmptySegment2.nodes[0];
+                EmptySegment1.nodes.RemoveAt(0);
+                EmptySegment2.nodes.RemoveAt(0);
+                CreateSegment(n1);
+                n1.segment.Add(graph ,n2);
+                return;
+            }
+            else if (s1==EmptySegment1)
+            {
+                Node n1 = EmptySegment1.nodes[0];
+                EmptySegment1.nodes.RemoveAt(0);
+                s2.Add(graph, n1);
+                return;
+            }
+            else if (s2 == EmptySegment2)
+            {
+                Node n2 = EmptySegment2.nodes[0];
+                EmptySegment2.nodes.RemoveAt(0);
+                s1.Add(graph, n2);
+                return;
+            }
+
             Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
             Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
             for (int i = 0; i < smallSegment.count; i++)
@@ -250,7 +280,10 @@ namespace ImageTemplate
                     myNode = channelGraph.Nodes[i, j];
 
                     //create a segment just for this node so we can use segments comparison function
-                    if (IsUnsegmented(myNode)) CreateSegment(myNode);
+                    if (IsUnsegmented(myNode)) { 
+                        myNode.segment = EmptySegment1;
+                        EmptySegment1.nodes.Add(myNode);
+                    }
 
                     for (int l = 0; l < myNode.neighbors.Count; l++)
                     {
@@ -261,7 +294,8 @@ namespace ImageTemplate
 
                         if (IsUnsegmented(neighbor))
                         {
-                            CreateSegment(neighbor);
+                            neighbor.segment=EmptySegment2;
+                            EmptySegment2.nodes.Add(neighbor);
                         }
 
                         //if the function returns true, then no merging and continue, else : merge
@@ -272,8 +306,8 @@ namespace ImageTemplate
                             k))
                         {
                             MergeSegments(channelGraph,
-                                neighbor.segment,
-                                myNode.segment
+                                myNode.segment,
+                                neighbor.segment
                             );
                         }
                     }
@@ -307,9 +341,7 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    int id = graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment);
-                    RGBPixel c = colors[id];
-                    graph.Picture[i, j] = c;
+                    graph.Picture[i, j] = colors[graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment)];
                 }
             }
         }
