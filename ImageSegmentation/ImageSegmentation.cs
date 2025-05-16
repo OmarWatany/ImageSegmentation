@@ -20,6 +20,13 @@ namespace ImageTemplate
             this.nodes = new List<Node>();
             this.Edges = new Dictionary<(Node, Node), int>();
         }
+
+        public void Add(Node node)
+        {
+            node.segment = this;
+            this.nodes.Add(node);
+        }
+
         public void Add(PixelGraph graph, Node node)
         {
             node.segment = this;
@@ -37,28 +44,36 @@ namespace ImageTemplate
             return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
         }
 
-        public Dictionary<(Node, Node), int> mst() // O(N*M)
+        public Dictionary<(Node, Node), int> mst()
         {
             var mst = new Dictionary<(Node, Node), int>();
+
             var edges = this.Edges.ToList();
 
             // Sort edges by weight (ascending for Kruskal's)
             edges.Sort((a, b) => a.Value.CompareTo(b.Value)); // O(N^2) || O(NLOGN) ?
             // if O(N^2) replace with priority queue
 
-            // Proper union-find structure
-            var parent = new Dictionary<Node, Node>();
-            foreach (var node in this.nodes)
-            {
-                parent[node] = node; // Each node is its own parent initially
-            }
+            //var pq = new PriorityQueue<KeyValuePair<(Node, Node), int>>(
+            //    (a,b) => a.Value.CompareTo(b.Value)
+            //);
 
-            Node Find(Node node)
-            {
-                if (parent[node] != node)
-                    parent[node] = Find(parent[node]); // Path compression
-                return parent[node];
-            }
+            //foreach (var e in Edges) pq.Enqueue(e);
+
+            // union-find
+            var parent = new Dictionary<Node, Node>();
+            this.nodes.ForEach(n => parent[n] = n);
+
+            //while (mst.Count < this.nodes.Count && pq.Count >= 1)
+            //{
+            //    var edge = pq.Dequeue();
+            //    var root1 = Find(edge.Key.Item1);
+            //    var root2 = Find(edge.Key.Item2);
+            //    if (root1 == root2) continue;
+
+            //    mst.Add(edge.Key, edge.Value);
+            //    parent[root2] = root1; // Union
+            //}
 
             foreach (var edge in edges) // O(E), E: number of edges
             {
@@ -73,17 +88,22 @@ namespace ImageTemplate
                 parent[root2] = root1; // Union
             }
 
+            Node Find(Node node)
+            {
+                if (parent[node] != node)
+                    parent[node] = Find(parent[node]); // Path compression
+                return parent[node];
+            }
+
             return mst;
         }
-
         public int InternalDifference()
         {
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
-
             var mst = this.mst();
             // Return the maximum edge weight in the segment
-            return mst.Select(e => e.Value).Max<int>();
+            return mst.Max(e => e.Value);
         }
 
         public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
@@ -121,7 +141,7 @@ namespace ImageTemplate
     public class Segments
     {
 
-        private int segmentIdIncrement = -1;
+        public int segmentIdIncrement = -1;
         public int NewSegmentId => ++segmentIdIncrement;
         //we have to use that because segments.count is variable , so two segments can have the same id
 
@@ -196,6 +216,16 @@ namespace ImageTemplate
 
             graph.Segments.Add(newSegment);
         }
+        public void CreateFinalSegment(Node node)
+        {
+            Segment newSegment = new Segment
+            {
+                ID = NewSegmentId,
+                nodes = new List<Node> { node }
+            };
+            node.finalsegment = newSegment;
+            this.Add(newSegment);
+        }
 
         public void CreateSegment(Node node)
         {
@@ -251,6 +281,25 @@ namespace ImageTemplate
             }
         }
 
+        public void ColorSegments(RGBPixel[] colors, PixelGraph graph) //O(N) , N: number of pixels
+        {
+            for (int i = 0; i < graph.height; i++)
+            {
+                for (int j = 0; j < graph.width; j++)
+                {
+                    RGBPixel c;
+                    if (graph.Nodes[i, j].finalsegment.ID == -1)
+                        c = new RGBPixel ();
+                    else
+                    {
+                        int id = this.segments.IndexOf(graph.Nodes[i, j].finalsegment);
+                        c = colors[id];
+                    }
+                    graph.Picture[i, j] = c;
+                }
+            }
+        }
+
         public void ColorSegments(PixelGraph graph) //O(N) , N: number of pixels
         {
             RGBPixel[] colors = CreateRandomColors(graph.Segments.Count);
@@ -261,6 +310,37 @@ namespace ImageTemplate
                     int id = graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment);
                     RGBPixel c = colors[id];
                     graph.Picture[i, j] = c;
+                }
+            }
+        }
+
+        public void Combine(PixelGraph RedGraph,PixelGraph BlueGraph,PixelGraph GreenGraph)
+        {
+            for (int r = 0; r < RedGraph.height; r++) {
+                for (int c = 0; c < RedGraph.width; c++)
+                {
+
+                    var RedNode = RedGraph.Nodes[r, c];
+                    var BlueNode = BlueGraph.Nodes[r, c];
+                    var GreenNode = GreenGraph.Nodes[r, c];
+                    for (int n = 0; n < RedNode.neighbors.Count; n++)
+                    {
+                        var RedNeighbor = RedNode.neighbors[n];
+                        var BlueNeighbor = BlueNode.neighbors[n];
+                        var GreenNeighbor = GreenNode.neighbors[n];
+
+                        if (RedNeighbor.segment == RedNode.segment
+                        && BlueNeighbor.segment == BlueNode.segment
+                        && GreenNeighbor.segment == GreenNode.segment)
+                        {
+                            // the same segment
+                            if (RedNode.finalsegment.ID == -1) CreateFinalSegment(RedNode);
+                            RedNode.finalsegment.nodes.Add(RedNeighbor);
+                            RedNeighbor.finalsegment = RedNode.finalsegment;
+                        }
+
+                    }
+
                 }
             }
         }

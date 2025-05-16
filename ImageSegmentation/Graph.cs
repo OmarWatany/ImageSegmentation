@@ -8,10 +8,12 @@ namespace ImageTemplate
         public List<Node> neighbors;
         public (int y, int x) index;
         public Segment segment;
+        public Segment finalsegment;
         public Node()
         {
             neighbors = new List<Node>();
             segment = Segment.EmptySegment;
+            finalsegment = Segment.EmptySegment;
         }
     }
 
