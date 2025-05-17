@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
 namespace ImageTemplate
@@ -22,13 +20,6 @@ namespace ImageTemplate
             this.nodes = new List<Node>();
             this.Edges = new Dictionary<(Node, Node), int>();
         }
-
-        public void Add(Node node)
-        {
-            node.segment = this;
-            this.nodes.Add(node);
-        }
-
         public void Add(PixelGraph graph, Node node)
         {
             node.segment = this;
@@ -40,79 +31,6 @@ namespace ImageTemplate
                     this.Edges[PixelGraph.MakeEdgeKey(node,neighbor)] = graph.getEdge(node,neighbor);
                 }
             }
-        }
-        public int getEdge(Node n1, Node n2)
-        {
-            return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
-        }
-
-        public List<KeyValuePair<(Node, Node), int>> mst()
-        {
-            var mst = new List<KeyValuePair<(Node, Node), int>>();
-            var edges = this.Edges.ToList();
-
-            // Sort edges by weight (ascending for Kruskal's)
-            edges.Sort((a, b) => a.Value.CompareTo(b.Value)); // O(N^2) || O(NLOGN) ?
-            // if O(N^2) replace with priority queue
-
-            // union-find
-            var parent = new Dictionary<Node, Node>();
-            this.nodes.ForEach(n => parent[n] = n);
-
-            foreach (var edge in edges) // O(E), E: number of edges
-            {
-                if (mst.Count >= this.nodes.Count - 1)
-                    break;
-
-                var root1 = Find(edge.Key.Item1);
-                var root2 = Find(edge.Key.Item2);
-                if (root1 == root2) continue;
-
-                mst.Add(edge);
-                parent[root2] = root1; // Union
-            }
-
-            Node Find(Node node)
-            {
-                if (parent[node] != node)
-                    parent[node] = Find(parent[node]); // Path compression
-                return parent[node];
-            }
-
-            return mst;
-        }
-
-        public List<KeyValuePair<(Node, Node), int>> mst_pq()
-        {
-            var mst = new List<KeyValuePair<(Node, Node), int>>();
-            var pq = new PriorityQueue<KeyValuePair<(Node, Node), int>>(
-                (a, b) => a.Value.CompareTo(b.Value)
-            );
-            foreach (var e in Edges) pq.Enqueue(e);
-
-            // union-find
-            var parent = new Dictionary<Node, Node>();
-            this.nodes.ForEach(n => parent[n] = n);
-
-            while (mst.Count < this.nodes.Count && pq.Count >= 1)
-            {
-                var edge = pq.Dequeue();
-                var root1 = Find(edge.Key.Item1);
-                var root2 = Find(edge.Key.Item2);
-                if (root1 == root2) continue;
-
-                mst.Add(edge);
-                parent[root2] = root1; // Union
-            }
-
-            Node Find(Node node)
-            {
-                if (parent[node] != node)
-                    parent[node] = Find(parent[node]); // Path compression
-                return parent[node];
-            }
-
-            return mst;
         }
 
         public List<((Node, Node), int)> mst_prim()
@@ -214,34 +132,11 @@ namespace ImageTemplate
             segments = new List<Segment>(30);
         }
 
-        public Segments(int n)
-        {
-            segments = new List<Segment>(n);
-        }
-
-        // return new segment's ID
-        public int New()
-        {
-            segments.Add(new Segment { ID = segments.Count });
-            return segments.Count - 1;
-        }
-
         public int Add(Segment seg)
         {
             segments.Add(seg);
             return segments.Count - 1;
         }
-
-        public Segment At(int segmentID)
-        {
-            if (segmentID < 0) return new Segment { ID = -1 }; // Empty Segment
-            return segments[segmentID];
-        }
-
-        public Segment Last() => segments[this.Count];
-
-
-
         public void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
         {
             if (s1==EmptySegment1 && s2==EmptySegment2)
@@ -292,18 +187,6 @@ namespace ImageTemplate
             return colors;
         }
         // TODO: Find Intersection between red, blue and green
-
-        public void CreateSegment(PixelGraph graph, (int y,int x) index)
-        {
-            Segment newSegment = new Segment
-            {
-                ID = NewSegmentId,
-                nodes = new List<Node> { graph.Nodes[index.y, index.x] }
-            };
-            graph.Nodes[index.y, index.x].segment = newSegment;
-
-            graph.Segments.Add(newSegment);
-        }
         public void CreateFinalSegment(Node node)
         {
             Segment newSegment = new Segment
@@ -325,9 +208,6 @@ namespace ImageTemplate
             node.segment = newSegment;
             this.Add(newSegment);
         }
-
-        public void AddToSegment(PixelGraph graph, Segment segment, Node node) => segment.Add(graph,node);
-
         public void SegmentChannel(PixelGraph channelGraph, int k)
         {
             Node neighbor, myNode;
@@ -379,26 +259,6 @@ namespace ImageTemplate
                 }
             }
         }
-
-        public void ColorSegments(RGBPixel[] colors, PixelGraph graph) //O(N) , N: number of pixels
-        {
-            for (int i = 0; i < graph.height; i++)
-            {
-                for (int j = 0; j < graph.width; j++)
-                {
-                    RGBPixel c;
-                    if (graph.Nodes[i, j].finalsegment.ID == -1)
-                        c = new RGBPixel ();
-                    else
-                    {
-                        int id = this.segments.IndexOf(graph.Nodes[i, j].finalsegment);
-                        c = colors[id];
-                    }
-                    graph.Picture[i, j] = c;
-                }
-            }
-        }
-
         public void ColorSegments(PixelGraph graph) //O(N) , N: number of pixels
         {
             RGBPixel[] colors = CreateRandomColors(graph.Segments.Count);
@@ -406,25 +266,31 @@ namespace ImageTemplate
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    graph.Picture[i, j] = colors[graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment)];
+                    Node n = graph.Nodes[i, j];
+                    Segment s = n.segment;
+                    int index=graph.Segments.segments.IndexOf(s);
+                    RGBPixel c= colors[index];
+                    graph.Picture[i, j] = c;
                 }
             }
         }
 
         public void Combine(PixelGraph RedGraph,PixelGraph BlueGraph,PixelGraph GreenGraph)
         {
+            Node RedNode,BlueNode, GreenNode;
+            Node RedNeighbor, BlueNeighbor, GreenNeighbor;
             for (int r = 0; r < RedGraph.height; r++) {
                 for (int c = 0; c < RedGraph.width; c++)
                 {
 
-                    var RedNode = RedGraph.Nodes[r, c];
-                    var BlueNode = BlueGraph.Nodes[r, c];
-                    var GreenNode = GreenGraph.Nodes[r, c];
+                    RedNode = RedGraph.Nodes[r, c];
+                    BlueNode = BlueGraph.Nodes[r, c];
+                    GreenNode = GreenGraph.Nodes[r, c];
                     for (int n = 0; n < RedNode.neighbors.Count; n++)
                     {
-                        var RedNeighbor = RedNode.neighbors[n];
-                        var BlueNeighbor = BlueNode.neighbors[n];
-                        var GreenNeighbor = GreenNode.neighbors[n];
+                        RedNeighbor = RedNode.neighbors[n];
+                        BlueNeighbor = BlueNode.neighbors[n];
+                        GreenNeighbor = GreenNode.neighbors[n];
 
                         if (RedNeighbor.segment == RedNode.segment
                         && BlueNeighbor.segment == BlueNode.segment
@@ -444,7 +310,7 @@ namespace ImageTemplate
 
         //Helper functions
         // Should we compare using pointer value ? I don't think so #important
-        public static bool AreSameSegment(Node a, Node b) => a.segment.ID == b.segment.ID;
+        public static bool AreSameSegment(Node a, Node b) => a.segment == b.segment;
         private bool IsUnsegmented(Node node) => node.segment.ID == -1;
     }
 }
