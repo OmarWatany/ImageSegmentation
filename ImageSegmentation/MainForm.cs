@@ -70,7 +70,6 @@ namespace ImageTemplate
                     using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
                     {
                         sw.WriteLine(final.GetSegmentsInfo());
-                        // the actual results here...
                     }
 
                     MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
@@ -78,7 +77,7 @@ namespace ImageTemplate
                 }
             }
 
-            }
+        }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
