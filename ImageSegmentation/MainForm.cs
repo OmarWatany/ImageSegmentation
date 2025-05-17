@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 
 namespace ImageTemplate
@@ -57,7 +58,27 @@ namespace ImageTemplate
             final.ColorSegments(colors, RedGraph);
 
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
-        }
+
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                saveFileDialog.Title = "Save Segment Report";
+                saveFileDialog.FileName = "SegmentReport.txt";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
+                    {
+                        sw.WriteLine(final.GetSegmentsInfo());
+                        // the actual results here...
+                    }
+
+                    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
+                        "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+
+            }
 
         private void MainForm_Load(object sender, EventArgs e)
         {

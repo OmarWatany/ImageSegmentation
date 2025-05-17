@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
@@ -440,6 +441,28 @@ namespace ImageTemplate
 
                 }
             }
+        }
+
+        public string GetSegmentsInfo()
+        {
+            int numSegments = segments.Count;
+
+            List<int> sizes = new List<int>();
+            foreach (var segment in segments)
+            {
+                sizes.Add(segment.count);
+            }
+
+            sizes.Sort((a, b) => b.CompareTo(a));
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Number of segments: {numSegments}");
+            foreach (int size in sizes)
+            {
+                sb.AppendLine(size.ToString());
+            }
+
+            return sb.ToString();
         }
 
         //Helper functions
