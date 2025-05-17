@@ -8,13 +8,19 @@ namespace ImageTemplate
 {
     public class PriorityQueue<T>
     {
-        private List<T> heap = new List<T>();
+        public List<T> heap;
 
         public int Count => heap.Count;
         Func<T, T, int> compare;
 
+        public PriorityQueue(Func<T,T,int> compare,int n) {
+            this.compare = compare;
+            heap = new List<T>(n);
+        }
+
         public PriorityQueue(Func<T,T,int> compare) {
             this.compare = compare;
+            heap = new List<T>(1024);
         }
 
         public void Enqueue(T item)
@@ -32,7 +38,6 @@ namespace ImageTemplate
 
         public T Dequeue()
         {
-            if (heap.Count == 0) throw new InvalidOperationException("Queue is empty");
             T first = heap[0];
             heap[0] = heap[heap.Count - 1];
             heap.RemoveAt(heap.Count - 1);
