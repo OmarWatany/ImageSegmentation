@@ -9,33 +9,38 @@ using System.Windows.Forms.VisualStyles;
 namespace ImageTemplate
 {
     public class MSTree {
-        List<((Node n, Node ni), int w)> Mst_m = new List<((Node, Node), int)>();
+        List<((Node, Node), int)> Mst_m = new List<((Node, Node), int)>();
         Segment s;
         Dictionary<(Node, Node), int> Edges => this.s.Edges;
         int count => s.count;
 
         public int Max;
 
-
         public MSTree(Segment s)
         {
             this.s = s;
         }
 
-        public void Add(Node node)
+        public void Add(PixelGraph graph, Node node)
         {
-            ((Node n, Node ni), int w) edge = ((node, node), int.MaxValue);
-            var mst = this.Mst_m;
+            var mst = this.Mst_m; 
+            var pq = new PriorityQueue<((Node, Node), int)>(
+                (a, b) => a.Item2.CompareTo(b.Item2), this.Edges.Count
+            );
 
-            node.neighbors.ForEach(ni =>
+            var firstNode = node;
+            foreach (var n in firstNode.neighbors)
             {
-                var e = PixelGraph.MakeEdgeKey(node, ni);
-                if (this.Edges.ContainsKey(e) && this.Edges[e] < edge.w)
-                    edge = (e, this.Edges[e]);
-            });
+                if (pq.Count >= this.Edges.Count) break;
+                var e = PixelGraph.MakeEdgeKey(firstNode, n);
+                if(this.Edges.ContainsKey(e))
+                    pq.Enqueue((e,this.Edges[e]));
+            }
 
+            if (pq.Count <= 0) return;
+            var edge = pq.Dequeue();
             mst.Add(edge);
-            if (edge.w >= this.Max) this.Max = 0;
+            if (edge.Item2 > this.Max) this.Max = 0;
         }
         
         public List<((Node, Node), int)> Build()
@@ -107,15 +112,17 @@ namespace ImageTemplate
         {
             node.segment = this;
             this.nodes.Add(node);
-            mst.Add(node);
+            //mst.Add(node);
             foreach (Node neighbor in node.neighbors)
             {
                 if(neighbor.segment == this)
                 {
-                    this.Edges[PixelGraph.MakeEdgeKey(node, neighbor)] = graph.getEdge(node, neighbor);
-                    mst.Add(neighbor);
+                    var k = PixelGraph.MakeEdgeKey(node, neighbor);
+                    var w = graph.getEdge(node, neighbor);
+                    this.Edges[k] = w;
                 }
             }
+            mst.Add(graph, node);
         }
 
         public int getEdge(Node n1, Node n2)
