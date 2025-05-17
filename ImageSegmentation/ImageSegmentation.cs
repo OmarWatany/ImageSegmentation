@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms.VisualStyles;
 
 //Main problem right now: every pixel is a segment on its own
@@ -45,49 +46,29 @@ namespace ImageTemplate
             return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
         }
 
-        public Dictionary<(Node, Node), int> mst()
+        public List<KeyValuePair<(Node, Node), int>> mst()
         {
-            var mst = new Dictionary<(Node, Node), int>();
-
+            var mst = new List<KeyValuePair<(Node, Node), int>>();
             var edges = this.Edges.ToList();
 
             // Sort edges by weight (ascending for Kruskal's)
             edges.Sort((a, b) => a.Value.CompareTo(b.Value)); // O(N^2) || O(NLOGN) ?
             // if O(N^2) replace with priority queue
 
-            //var pq = new PriorityQueue<KeyValuePair<(Node, Node), int>>(
-            //    (a,b) => a.Value.CompareTo(b.Value)
-            //);
-
-            //foreach (var e in Edges) pq.Enqueue(e);
-
             // union-find
             var parent = new Dictionary<Node, Node>();
             this.nodes.ForEach(n => parent[n] = n);
 
-            //while (mst.Count < this.nodes.Count && pq.Count >= 1)
-            //{
-            //    var edge = pq.Dequeue();
-            //    var root1 = Find(edge.Key.Item1);
-            //    var root2 = Find(edge.Key.Item2);
-            //    if (root1 == root2) continue;
-
-            //    mst.Add(edge.Key, edge.Value);
-            //    parent[root2] = root1; // Union
-            //}
-
-            //Node root1;
-            //Node root2;
             foreach (var edge in edges) // O(E), E: number of edges
             {
                 if (mst.Count >= this.nodes.Count - 1)
                     break;
 
-            var    root1 = Find(edge.Key.Item1);
-            var    root2 = Find(edge.Key.Item2);
+                var root1 = Find(edge.Key.Item1);
+                var root2 = Find(edge.Key.Item2);
                 if (root1 == root2) continue;
 
-                mst.Add(edge.Key, edge.Value);
+                mst.Add(edge);
                 parent[root2] = root1; // Union
             }
 
@@ -100,15 +81,86 @@ namespace ImageTemplate
 
             return mst;
         }
+
+        public List<KeyValuePair<(Node, Node), int>> mst_pq()
+        {
+            var mst = new List<KeyValuePair<(Node, Node), int>>();
+            var pq = new PriorityQueue<KeyValuePair<(Node, Node), int>>(
+                (a, b) => a.Value.CompareTo(b.Value)
+            );
+            foreach (var e in Edges) pq.Enqueue(e);
+
+            // union-find
+            var parent = new Dictionary<Node, Node>();
+            this.nodes.ForEach(n => parent[n] = n);
+
+            while (mst.Count < this.nodes.Count && pq.Count >= 1)
+            {
+                var edge = pq.Dequeue();
+                var root1 = Find(edge.Key.Item1);
+                var root2 = Find(edge.Key.Item2);
+                if (root1 == root2) continue;
+
+                mst.Add(edge);
+                parent[root2] = root1; // Union
+            }
+
+            Node Find(Node node)
+            {
+                if (parent[node] != node)
+                    parent[node] = Find(parent[node]); // Path compression
+                return parent[node];
+            }
+
+            return mst;
+        }
+
+        public List<((Node, Node), int)> mst_prim()
+        {
+            var mst = new List<((Node, Node), int)>(this.count);
+            var pq = new PriorityQueue<((Node, Node), int)>(
+                (a, b) => a.Item2.CompareTo(b.Item2), this.Edges.Count
+            );
+
+            var firstNode = this.Edges.ElementAt(0).Key.Item1;
+
+            foreach (var n in firstNode.neighbors)
+            {
+                if (pq.Count >= this.Edges.Count) break;
+                var e = PixelGraph.MakeEdgeKey(firstNode, n);
+                if(this.Edges.ContainsKey(e))
+                    pq.Enqueue((e,this.Edges[e]));
+            }
+
+            var visit = new HashSet<Node>(this.count + 1);
+            visit.Add(pq.heap[0].Item1.Item1);
+
+            while (mst.Count < this.count && pq.Count >= 1)
+            {
+                var edge = pq.Dequeue();
+                if (visit.Contains(edge.Item1.Item2)) continue;
+                mst.Add(edge);
+                visit.Add(edge.Item1.Item2);
+                foreach (var n in edge.Item1.Item2.neighbors)
+                {
+                    if (pq.Count >= this.Edges.Count) break;
+                    var e = PixelGraph.MakeEdgeKey(firstNode, n);
+                    if(this.Edges.ContainsKey(e))
+                        pq.Enqueue((e,this.Edges[e]));
+                }
+            }
+
+            return mst;
+        }
         public int InternalDifference()
         {
             // If the segment has 1 or less than 1, return 0
             if (this.count <= 1) return 0;
             if(this==Segments.EmptySegment1) { Console.WriteLine("1"); }
             else if(this==Segments.EmptySegment2) { Console.WriteLine("2"); }
-            var mst = this.mst();
+            var mst = this.mst_prim();
             // Return the maximum edge weight in the segment
-            return mst.Max(e => e.Value);
+            return mst.Max(e => e.Item2);
         }
 
         public int SegmentsDifference(PixelGraph graph, Segment s2) //O(N) , N: number of nodes in the smaller segment
@@ -146,7 +198,7 @@ namespace ImageTemplate
     public class Segments
     {
 
-        public int segmentIdIncrement = -1;
+        public int segmentIdIncrement = 1;
         public int NewSegmentId => ++segmentIdIncrement;
         //we have to use that because segments.count is variable , so two segments can have the same id
 
@@ -155,10 +207,16 @@ namespace ImageTemplate
         {
             get => segments.Count;
         }
-        public static Segment EmptySegment1=new Segment(), EmptySegment2=new Segment();
+        public static Segment EmptySegment1 = new Segment { ID = 0 }, EmptySegment2 = new Segment{ ID = 1 };
+        //public static Segment EmptySegment1 = new Segment(), EmptySegment2 = new Segment();
         public Segments()
         {
             segments = new List<Segment>(30);
+        }
+
+        public Segments(int n)
+        {
+            segments = new List<Segment>(n);
         }
 
         // return new segment's ID
@@ -310,7 +368,14 @@ namespace ImageTemplate
                                 neighbor.segment
                             );
                         }
+                        else
+                        {
+                            EmptySegment2.nodes.ForEach(n => n.segment = Segment.EmptySegment);
+                            EmptySegment2.nodes.Clear();
+                        }
                     }
+                    EmptySegment1.nodes.ForEach(n => n.segment = Segment.EmptySegment);
+                    EmptySegment1.nodes.Clear();
                 }
             }
         }
