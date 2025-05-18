@@ -101,7 +101,6 @@ namespace ImageTemplate
             }
             return colors;
         }
-        // TODO: Find Intersection between red, blue and green
 
         public void CreateSegment(PixelGraph graph, (int y,int x) index)
         {
@@ -114,6 +113,7 @@ namespace ImageTemplate
 
             graph.Segments.Add(newSegment);
         }
+
         public void CreateFinalSegment(Node node)
         {
             Segment newSegment = new Segment
@@ -180,12 +180,19 @@ namespace ImageTemplate
                         }
                         else
                         {
-                            EmptySegment2.nodes.ForEach(n => n.segment = Segment.EmptySegment);
-                            EmptySegment2.nodes.Clear();
+                            if(EmptySegment2.count >= 1)
+                            {
+                                EmptySegment2.nodes.ForEach(n => n.segment = Segment.EmptySegment);
+                                EmptySegment2.nodes.Clear();
+                            }
                         }
                     }
-                    EmptySegment1.nodes.ForEach(n => n.segment = Segment.EmptySegment);
-                    EmptySegment1.nodes.Clear();
+                    if(EmptySegment1.count >= 1)
+                    {
+                        ////CreateSegment(EmptySegment1.nodes.First());
+                        EmptySegment1.nodes.First().segment = Segment.EmptySegment;
+                        EmptySegment1.nodes.Clear();
+                    }
                 }
             }
         }

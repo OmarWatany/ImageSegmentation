@@ -9,7 +9,7 @@ using System.Windows.Forms.VisualStyles;
 namespace ImageTemplate
 {
     public class MSTree {
-        List<((Node, Node), int)> Mst_m = new List<((Node, Node), int)>();
+        List<((Node n, Node ni), int w)> Mst_m = new List<((Node, Node), int)>();
         Segment s;
         Dictionary<(Node, Node), int> Edges => this.s.Edges;
         int count => s.count;
@@ -22,26 +22,20 @@ namespace ImageTemplate
             this.s = s;
         }
 
-        public void Add(PixelGraph graph, Node node)
+        public void Add(Node node)
         {
-            var mst = this.Mst_m; 
-            var pq = new PriorityQueue<((Node, Node), int)>(
-                (a, b) => a.Item2.CompareTo(b.Item2), this.Edges.Count
-            );
+            ((Node n, Node ni), int w) edge = ((node, node), int.MaxValue);
+            var mst = this.Mst_m;
 
-            var firstNode = node;
-            foreach (var n in firstNode.neighbors)
+            node.neighbors.ForEach(ni =>
             {
-                if (pq.Count >= this.Edges.Count) break;
-                var e = PixelGraph.MakeEdgeKey(firstNode, n);
-                if(this.Edges.ContainsKey(e))
-                    pq.Enqueue((e,this.Edges[e]));
-            }
+                var e = PixelGraph.MakeEdgeKey(node, ni);
+                if (this.Edges.ContainsKey(e) && this.Edges[e] < edge.w)
+                    edge = (e, this.Edges[e]);
+            });
 
-            if (pq.Count <= 0) return;
-            var edge = pq.Dequeue();
             mst.Add(edge);
-            if (edge.Item2 > this.Max) this.Max = 0;
+            if (edge.w >= this.Max) this.Max = 0;
         }
         
         public List<((Node, Node), int)> Build()
@@ -113,24 +107,21 @@ namespace ImageTemplate
         {
             node.segment = this;
             this.nodes.Add(node);
+            mst.Add(node);
             foreach (Node neighbor in node.neighbors)
             {
                 if(neighbor.segment == this)
                 {
-                    var k = PixelGraph.MakeEdgeKey(node, neighbor);
-                    var w = graph.getEdge(node, neighbor);
-                    this.Edges[k] = w;
+                    this.Edges[PixelGraph.MakeEdgeKey(node, neighbor)] = graph.getEdge(node, neighbor);
+                    mst.Add(neighbor);
                 }
             }
-            mst.Add(graph, node);
         }
 
         public int getEdge(Node n1, Node n2)
         {
             return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
         }
-
-
 
         public int InternalDifference()
         {
@@ -149,17 +140,17 @@ namespace ImageTemplate
             int minEdge = smallSegment.nodes.Select(n =>
                 n.neighbors.Select(
                     ni => (ni.segment == bigSegment) ? graph.getEdge(n, ni) : int.MaxValue
-                ).Min<int>() // O(1) //returns the min edge connecting from a node to the other segment if found
-            ).Min<int>(); // O(N), N: number of nodes in the smaller segment //returns the min edge connecting to the other segment from all minimums
+                ).Min<int>() // O(E) //returns the min edge connecting from a node to the other segment if found
+            ).First(); // O(N), N: number of nodes in the smaller segment //returns the min edge connecting to the other segment from all minimums
 
             return (minEdge < int.MaxValue) ? minEdge : -1; //return -1 if no connecting edges
         }
 
         public bool SegmentsComparison(PixelGraph graph, Segment s2, int k)
         {
-            int internalDiff1 = this.InternalDifference();
-            int internalDiff2 = s2.InternalDifference();
-            int segmentsDifference = this.SegmentsDifference(graph, s2);
+            double internalDiff1 = this.InternalDifference();
+            double internalDiff2 = s2.InternalDifference();
+            double segmentsDifference = this.SegmentsDifference(graph, s2);
             if (segmentsDifference == -1) return true; //it returns -1 when no edges are common , so we should return true, which means don't merge
             double tao1 = (double)k / this.count;
             double tao2 = (double)k / s2.count;
