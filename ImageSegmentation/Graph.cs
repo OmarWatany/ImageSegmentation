@@ -1,17 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 namespace ImageTemplate
 {
-    public class Node
+    public struct Index
+    {
+        public int y;
+        public int x;
+        public Index(int y,int x)
+        {
+            this.y = y;
+            this.x = x;
+        }
+
+        public Index((int y,int x) i)
+        {
+            this.y = i.y;
+            this.x = i.x;
+        }
+    }
+    public struct Node
     {
         //public Segment segment;
-        public List<Node> neighbors;
-        public (int y, int x) index;
+        public List<Index> neighbors;
+        public Index index;
         public Segment segment;
         public Segment finalsegment;
-        public Node()
+        public Node(int x = 0)
         {
-            neighbors = new List<Node>(8);
+            this.index = new Index(-1, -1);
+            neighbors = new List<Index>(8);
             segment = Segment.EmptySegment;
             finalsegment = Segment.EmptySegment;
         }
@@ -24,23 +42,26 @@ namespace ImageTemplate
         public Segments Segments;
         public int width, height;
         public Func<RGBPixel, byte> GetColor;
-        public Dictionary<(Node, Node), int> Edges;
+        public Dictionary<(Index,Index), int> Edges;
 
-        public Node Node((int y, int x) index)
-        {
+        public Node At(Index index) {
             return this.Nodes[index.y, index.x];
         }
 
-        public static (Node, Node) MakeEdgeKey(Node a, Node b)
+        public static (Index,Index) MakeEdgeKey(Node a, Node b)
         {
             // if a.y > b.y (b,a) to preserve order and make sure a.y is always < b.y
             // if a.x > b.x (b,a)
             if (a.index.y == b.index.y)
-                return (a.index.x < b.index.x) ? (a, b) : (b, a);
+                return (a.index.x < b.index.x) ? (a.index, b.index) : (b.index, a.index);
             else if (a.index.y > b.index.y) 
-                return (b, a);
-            return (a, b);
+                return (b.index, a.index);
+            return (a.index, b.index);
         }
+
+        public int getEdge(Node n1, Index n2) => getEdge(n1,At(n2));
+
+        public int getEdge(Index n1, Index n2) => getEdge(At(n1),At(n2));
 
         public int getEdge(Node n1,Node n2)
         {
@@ -59,11 +80,16 @@ namespace ImageTemplate
             this.Nodes = new Node[picture.GetLength(0), picture.GetLength(1)];
             this.Segments = new Segments();
             this.GetColor = GetColor; // Maybe we could use it 
-            this.Edges = new Dictionary<(Node, Node), int>();
+            this.Edges = new Dictionary<(Index,Index),int>();
 
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
-                    Nodes[y, x] = new Node();
+                {
+                    Nodes[y, x] = new Node(0)
+                    {
+                        index = new Index(y, x)
+                    };
+                }
 
             for (int y = 0; y < height; y++) // O(W*H)
             {
@@ -77,8 +103,7 @@ namespace ImageTemplate
                             // traverse the surrounding cells
                             if (x + c < 0 || x + c >= width) continue;
                             if (r == 0 && c == 0) continue;
-                            Nodes[y, x].index = (y, x);
-                            Nodes[y, x].neighbors.Add(Nodes[y + r, x + c]);
+                            Nodes[y, x].neighbors.Add(Nodes[y + r, x + c].index);
                             CalcWeight(Nodes[y,x], Nodes[y + r, x + c],
                                  GetColor(picture[y, x]), GetColor(picture[y + r, x + c])
                             );

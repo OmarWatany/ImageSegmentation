@@ -9,9 +9,9 @@ using System.Windows.Forms.VisualStyles;
 namespace ImageTemplate
 {
     public class MSTree {
-        List<((Node n, Node ni), int w)> Mst_m = new List<((Node, Node), int)>();
+        List<((Index n, Index ni), int w)> Mst_m = new List<((Index, Index), int)>();
         Segment s;
-        Dictionary<(Node, Node), int> Edges => this.s.Edges;
+        Dictionary<(Index, Index), int> Edges => this.s.Edges;
         int count => s.count;
 
         public int Max;
@@ -23,56 +23,32 @@ namespace ImageTemplate
 
         public void Add(Node node)
         {
-            ((Node n, Node ni), int w) edge = ((node, node), int.MaxValue);
+            ((Index n, Index ni), int w) edge = ((node.index, node.index), int.MaxValue);
+            Node min_ni = new Node(0);
             var mst = this.Mst_m;
 
-            node.neighbors.ForEach(ni =>
+            foreach (var ni in node.neighbors)
             {
-                var e = PixelGraph.MakeEdgeKey(node, ni);
+                var e = PixelGraph.MakeEdgeKey(node, s.graph.At(ni));
                 if (this.Edges.ContainsKey(e) && this.Edges[e] < edge.w)
-                    edge = (e, this.Edges[e]);
-            });
-
-            mst.Add(edge);
-            if (edge.w >= this.Max) this.Max = 0;
-        }
-        
-        public List<((Node, Node), int)> Build()
-        {
-            var mst = this.Mst_m; 
-            var pq = new PriorityQueue<((Node, Node), int)>(
-                (a, b) => a.Item2.CompareTo(b.Item2), this.Edges.Count
-            );
-
-            var firstNode = this.Edges.ElementAt(0).Key.Item1;
-
-            foreach (var n in firstNode.neighbors)
-            {
-                if (pq.Count >= this.Edges.Count) break;
-                var e = PixelGraph.MakeEdgeKey(firstNode, n);
-                if(this.Edges.ContainsKey(e))
-                    pq.Enqueue((e,this.Edges[e]));
-            }
-
-            var visit = new HashSet<Node>(this.count + 1);
-            visit.Add(pq.heap[0].Item1.Item1);
-
-            while (mst.Count < this.count && pq.Count >= 1)
-            {
-                var edge = pq.Dequeue();
-                if (visit.Contains(edge.Item1.Item2)) continue;
-                mst.Add(edge);
-                visit.Add(edge.Item1.Item2);
-                foreach (var n in edge.Item1.Item2.neighbors)
                 {
-                    if (pq.Count >= this.Edges.Count) break;
-                    var e = PixelGraph.MakeEdgeKey(firstNode, n);
-                    if(this.Edges.ContainsKey(e))
-                        pq.Enqueue((e,this.Edges[e]));
+                    edge = (e, this.Edges[e]);
+                    min_ni = s.graph.At(ni);
                 }
             }
 
-            return mst;
+            //node.neighbors.ForEach(ni =>
+            //{
+            //    var e = PixelGraph.MakeEdgeKey(node, s.graph.At(ni));
+            //    if (this.Edges.ContainsKey(e) && this.Edges[e] < edge.w)
+            //    {
+            //        edge = (e, this.Edges[e]);
+            //        min_ni = s.graph.At(ni);
+            //    }
+            //});
+
+            mst.Add(edge);
+            if (edge.w >= this.Max) this.Max = 0;
         }
     }
 
@@ -84,35 +60,40 @@ namespace ImageTemplate
         }
 
         public int ID;
-        public List<Node> nodes;
-        public Dictionary<(Node, Node), int> Edges; //contains all edges of the segment
+        public List<Index> nodes;
+        public Dictionary<(Index, Index), int> Edges; //contains all edges of the segment
         MSTree mst;
+        public PixelGraph graph;
 
 
         public Segment()
         {
-            this.nodes = new List<Node>();
-            this.Edges = new Dictionary<(Node, Node), int>();
+            this.nodes = new List<Index>();
+            this.Edges = new Dictionary<(Index, Index), int>();
             this.mst = new MSTree(this);
         }
 
-        public void Add(Node node)
+        public Segment(PixelGraph graph)
         {
-            node.segment = this;
-            this.nodes.Add(node);
+            this.nodes = new List<Index>();
+            this.Edges = new Dictionary<(Index, Index), int>();
+            this.mst = new MSTree(this);
+            this.graph = graph;
         }
 
-        public void Add(PixelGraph graph, Node node)
+        public void Add(PixelGraph graph, Index i)
         {
-            node.segment = this;
-            this.nodes.Add(node);
-            //mst.Add(node);
-            foreach (Node neighbor in node.neighbors)
+            graph.Nodes[i.y, i.x].segment = this;
+            this.nodes.Add(i);
+            Node node = graph.At(i);
+
+            mst.Add(node);
+            foreach (var neighbor in node.neighbors)
             {
-                if(neighbor.segment == this)
+                if(graph.At(neighbor).segment == this)
                 {
-                    this.Edges[PixelGraph.MakeEdgeKey(node, neighbor)] = graph.getEdge(node, neighbor);
-                    mst.Add(neighbor);
+                    this.Edges[PixelGraph.MakeEdgeKey(node, graph.At(neighbor))] = graph.getEdge(node, graph.At(neighbor));
+                    mst.Add(graph.At(neighbor));
                 }
             }
         }
@@ -137,8 +118,8 @@ namespace ImageTemplate
             Segment bigSegment = (this.count < s2.count) ? s2 : this;
 
             int minEdge = smallSegment.nodes.Select(n =>
-                n.neighbors.Select(
-                    ni => (ni.segment == bigSegment) ? graph.getEdge(n, ni) : int.MaxValue
+                graph.At(n).neighbors.Select(
+                    ni => (graph.At(ni).segment == bigSegment) ? graph.getEdge(n, ni) : int.MaxValue
                 ).Min<int>() // O(E) //returns the min edge connecting from a node to the other segment if found
             ).First(); // O(N), N: number of nodes in the smaller segment //returns the min edge connecting to the other segment from all minimums
 
@@ -157,7 +138,7 @@ namespace ImageTemplate
             return (segmentsDifference > MInt);
         }
 
-        public static Segment EmptySegment = new Segment
+        public static Segment EmptySegment = new Segment()
         {
             ID = -1
         };
