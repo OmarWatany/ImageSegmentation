@@ -87,22 +87,5 @@ namespace ImageTemplate
                 }
             }
         }
-
-        public int CountUnSegmented()
-        {
-            int count = 0;
-            Node node;
-            for(var y=0;y < this.height; y++)
-            {
-                for(var x=0;x < this.height; x++)
-                {
-                    node = this.Nodes[y, x];
-                    if ( node.segment.ID == -1
-                      || node.segment.ID == 0
-                      || node.segment.ID == 1) count++;
-                }
-            }
-            return count;
-        }
     }
 }
