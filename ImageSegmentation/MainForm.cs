@@ -27,7 +27,7 @@ namespace ImageTemplate
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 //ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
-                RedGraph = new PixelGraph(this.ImageMatrix,x => x.blue);
+                RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
                 BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
             }

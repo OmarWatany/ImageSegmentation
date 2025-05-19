@@ -46,9 +46,9 @@ namespace ImageTemplate
         {
             return (n1==n2)?int.MaxValue :this.Edges[MakeEdgeKey(n1, n2)];
         }
-        public void CalcWeight(Node n1, Node n2,byte pixel1, byte pixel2)
+        public void CalcWeight(Node n1, Node n2,int pixel1, int pixel2)
         {
-            Edges[MakeEdgeKey(n1, n2)] = pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
+            Edges[MakeEdgeKey(n1, n2)] = pixel1 > pixel2 ? (pixel1 - pixel2) : (pixel2 - pixel1);
         }
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels
