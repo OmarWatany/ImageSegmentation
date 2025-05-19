@@ -18,39 +18,21 @@ namespace ImageTemplate
             get => segments.Count;
         }
         public static Segment EmptySegment1 = new Segment { ID = 0 }, EmptySegment2 = new Segment{ ID = 1 };
-        //public static Segment EmptySegment1 = new Segment(), EmptySegment2 = new Segment();
+
+
         public Segments()
         {
             segments = new List<Segment>(30);
         }
 
-        public Segments(int n)
-        {
-            segments = new List<Segment>(n);
-        }
-
         // return new segment's ID
-        public Segment New()
-        {
-            var s = new Segment { ID = segments.Count };
-            segments.Add(s);
-            return s;
-        }
-
         public int Add(Segment seg)
         {
             segments.Add(seg);
             return segments.Count - 1;
         }
 
-        public Segment At(int segmentID)
-        {
-            if (segmentID < 0) return new Segment { ID = -1 }; // Empty Segment
-            return segments[segmentID];
-        }
-
         public Segment Last() => segments[this.Count];
-
 
         public void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
         {
@@ -64,18 +46,22 @@ namespace ImageTemplate
                 n1.segment.Add(graph ,n2);
                 return;
             }
-            else if (s1==EmptySegment1)
+            else if (s1==EmptySegment1 || s2==EmptySegment1)
             {
+                if (EmptySegment1.count < 1) return;
                 Node n1 = EmptySegment1.nodes[0];
                 EmptySegment1.nodes.RemoveAt(0);
-                s2.Add(graph, n1);
+                Segment s = (s1 == EmptySegment1) ? s2 : s1;
+                s.Add(graph, n1);
                 return;
             }
-            else if (s2 == EmptySegment2)
+            else if (s2 == EmptySegment2 || s1 == EmptySegment2)
             {
+                if (EmptySegment2.count < 1) return;
                 Node n2 = EmptySegment2.nodes[0];
                 EmptySegment2.nodes.RemoveAt(0);
-                s1.Add(graph, n2);
+                Segment s = (s1 == EmptySegment2) ? s2 : s1;
+                s.Add(graph, n2);
                 return;
             }
 
@@ -86,7 +72,6 @@ namespace ImageTemplate
                 bigSegment.Add(graph, smallSegment.nodes[i]);
             }
             this.segments.Remove(smallSegment); // O(n) operation
-            // When smallSegment get's removed the segments after it get changed so the id
         }
 
         // NOTE: Probably class Segments' operation
@@ -100,18 +85,6 @@ namespace ImageTemplate
                 colors[i].blue = (byte)((i * 30) % 255);
             }
             return colors;
-        }
-
-        public void CreateSegment(PixelGraph graph, (int y,int x) index)
-        {
-            Segment newSegment = new Segment
-            {
-                ID = NewSegmentId,
-                nodes = new List<Node> { graph.Nodes[index.y, index.x] }
-            };
-            graph.Nodes[index.y, index.x].segment = newSegment;
-
-            graph.Segments.Add(newSegment);
         }
 
         public void CreateFinalSegment(Node node)
@@ -130,13 +103,15 @@ namespace ImageTemplate
             Segment newSegment = new Segment
             {
                 ID = NewSegmentId,
-                nodes = new List<Node> { node }
+                //nodes = new List<Node> { node }
             };
-            node.segment = newSegment;
+            //node.segment = newSegment;
+            newSegment.Add(node);
             this.Add(newSegment);
         }
 
         public void AddToSegment(PixelGraph graph, Segment segment, Node node) => segment.Add(graph,node);
+
 
         public void SegmentChannel(PixelGraph channelGraph, int k)
         {
@@ -148,9 +123,8 @@ namespace ImageTemplate
                     myNode = channelGraph.Nodes[i, j];
 
                     //create a segment just for this node so we can use segments comparison function
-                    if (IsUnsegmented(myNode)) { 
-                        myNode.segment = EmptySegment1;
-                        EmptySegment1.nodes.Add(myNode);
+                    if (IsUnsegmented(myNode)) {
+                        CreateSegment(myNode);
                     }
 
                     for (int l = 0; l < myNode.neighbors.Count; l++)
@@ -161,16 +135,13 @@ namespace ImageTemplate
                             continue;
 
                         if (IsUnsegmented(neighbor))
-                        {
-                            neighbor.segment=EmptySegment2;
-                            EmptySegment2.nodes.Add(neighbor);
-                        }
+                            EmptySegment2.Add(neighbor);
 
                         //if the function returns true, then no merging and continue, else : merge
                         // we should stop getting segments using it's ID because its different from it's place #important
-                        if (!neighbor.segment 
+                        if (!myNode.segment 
                             .SegmentsComparison(channelGraph,
-                            myNode.segment,
+                            neighbor.segment,
                             k))
                         {
                             MergeSegments(channelGraph,
@@ -178,20 +149,8 @@ namespace ImageTemplate
                                 neighbor.segment
                             );
                         }
-                        else
-                        {
-                            if(EmptySegment2.count >= 1)
-                            {
-                                EmptySegment2.nodes.ForEach(n => n.segment = Segment.EmptySegment);
-                                EmptySegment2.nodes.Clear();
-                            }
-                        }
-                    }
-                    if(EmptySegment1.count >= 1)
-                    {
-                        ////CreateSegment(EmptySegment1.nodes.First());
-                        EmptySegment1.nodes.First().segment = Segment.EmptySegment;
-                        EmptySegment1.nodes.Clear();
+                        EmptySegment2.nodes.ForEach(n => n.segment = Segment.EmptySegment);
+                        EmptySegment2.nodes.Clear();
                     }
                 }
             }
@@ -272,7 +231,7 @@ namespace ImageTemplate
             sizes.Sort((a, b) => b.CompareTo(a));
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Number of segments: {numSegments}");
+            sb.AppendLine($"{numSegments}");
             foreach (int size in sizes)
             {
                 sb.AppendLine(size.ToString());

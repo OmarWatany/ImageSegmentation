@@ -68,16 +68,20 @@ namespace ImageTemplate
                 saveFileDialog.Title = "Save Segment Report";
                 saveFileDialog.FileName = "SegmentReport.txt";
 
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
                 {
-                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
-                    {
-                        sw.WriteLine(final.GetSegmentsInfo());
-                    }
-
-                    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
-                        "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    sw.WriteLine(final.GetSegmentsInfo());
                 }
+                //if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                //{
+                //    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
+                //    {
+                //        sw.WriteLine(final.GetSegmentsInfo());
+                //    }
+
+                //    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
+                //    "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //}
             }
 
         }
