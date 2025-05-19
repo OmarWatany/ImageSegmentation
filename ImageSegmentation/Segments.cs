@@ -217,7 +217,21 @@ namespace ImageTemplate
                 }
             }
         }
-
+        public int CountUnSegmented()
+        {
+            int count = 0;
+            Node node;
+            this.segments.ForEach(s =>
+            {
+                for (int i = 0; i < s.count; i++)
+                {
+                    node = s.nodes[i];
+                    if (node.segment.ID < 2)
+                        count++;
+                }
+            });
+            return count;
+        }
         public string GetSegmentsInfo()
         {
             int numSegments = segments.Count;
