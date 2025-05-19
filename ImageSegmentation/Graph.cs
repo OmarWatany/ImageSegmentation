@@ -25,22 +25,30 @@ namespace ImageTemplate
         public int width, height;
         public Func<RGBPixel, byte> GetColor;
         public Dictionary<(Node, Node), int> Edges;
+
         public Node Node((int y, int x) index)
         {
             return this.Nodes[index.y, index.x];
         }
+
         public static (Node, Node) MakeEdgeKey(Node a, Node b)
         {
-            // Compare by index
-            return (a.index.CompareTo(b.index) <= 0) ? (a, b) : (b, a);
+            // if a.y > b.y (b,a) to preserve order and make sure a.y is always < b.y
+            // if a.x > b.x (b,a)
+            if (a.index.y == b.index.y)
+                return (a.index.x < b.index.x) ? (a, b) : (b, a);
+            else if (a.index.y > b.index.y) 
+                return (b, a);
+            return (a, b);
         }
+
         public int getEdge(Node n1,Node n2)
         {
-            return this.Edges[MakeEdgeKey(n1, n2)];
+            return (n1==n2)?int.MaxValue :this.Edges[MakeEdgeKey(n1, n2)];
         }
-        public void CalcWeight(Node n1, Node n2,byte pixel1, byte pixel2)
+        public void CalcWeight(Node n1, Node n2,int pixel1, int pixel2)
         {
-            Edges[MakeEdgeKey(n1, n2)] = pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
+            Edges[MakeEdgeKey(n1, n2)] = pixel1 > pixel2 ? (pixel1 - pixel2) : (pixel2 - pixel1);
         }
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels
@@ -78,6 +86,23 @@ namespace ImageTemplate
                     }
                 }
             }
+        }
+
+        public int CountUnSegmented()
+        {
+            int count = 0;
+            Node node;
+            for(var y=0;y < this.height; y++)
+            {
+                for(var x=0;x < this.height; x++)
+                {
+                    node = this.Nodes[y, x];
+                    if ( node.segment.ID == -1
+                      || node.segment.ID == 0
+                      || node.segment.ID == 1) count++;
+                }
+            }
+            return count;
         }
     }
 }

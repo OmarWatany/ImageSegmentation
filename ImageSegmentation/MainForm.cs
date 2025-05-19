@@ -27,7 +27,7 @@ namespace ImageTemplate
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 //ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
-                RedGraph = new PixelGraph(this.ImageMatrix,x => x.blue);
+                RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
                 BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
             }
@@ -41,21 +41,24 @@ namespace ImageTemplate
             int k = int.Parse(textBox1.Text);
             Stopwatch timer = Stopwatch.StartNew();
             RedGraph.Segments.SegmentChannel(RedGraph, k);
+            int ur = RedGraph.CountUnSegmented();
             timer.Stop();
-
-            long time = timer.ElapsedMilliseconds;
-            Console.WriteLine("number of segments:" + RedGraph.Segments.segments.Count);
-            Console.WriteLine("Milliseconds taken to segment the image:" + time);
-            Console.WriteLine("Seconds taken to segment the image:" + time/1000);
-
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
+            ur = BlueGraph.CountUnSegmented();
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
+            ur = GreenGraph.CountUnSegmented();
 
             Segments final = new Segments();
             final.Combine(RedGraph, BlueGraph, GreenGraph);
 
             var colors = final.CreateRandomColors(final.Count + 1);
             final.ColorSegments(colors, RedGraph);
+            ur = RedGraph.CountUnSegmented();
+
+            long time = timer.ElapsedMilliseconds;
+            Console.WriteLine("number of segments:" + RedGraph.Segments.segments.Count);
+            Console.WriteLine("Milliseconds taken to segment the image:" + time);
+            Console.WriteLine("Seconds taken to segment the image:" + time/1000);
 
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
 
@@ -65,16 +68,20 @@ namespace ImageTemplate
                 saveFileDialog.Title = "Save Segment Report";
                 saveFileDialog.FileName = "SegmentReport.txt";
 
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
                 {
-                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
-                    {
-                        sw.WriteLine(final.GetSegmentsInfo());
-                    }
-
-                    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
-                        "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    sw.WriteLine(final.GetSegmentsInfo());
                 }
+                //if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                //{
+                //    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
+                //    {
+                //        sw.WriteLine(final.GetSegmentsInfo());
+                //    }
+
+                //    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
+                //    "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //}
             }
 
         }
