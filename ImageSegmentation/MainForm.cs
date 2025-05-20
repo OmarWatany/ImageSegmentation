@@ -35,7 +35,6 @@ namespace ImageTemplate
                 GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
                 final = new Segments();
             }
-            textBox1.Text = "1";
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
         }
@@ -84,7 +83,7 @@ namespace ImageTemplate
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-
+            textBox1.Text = "1";
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -114,6 +113,11 @@ namespace ImageTemplate
             {
                 current = -1;
             }
+        }
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
