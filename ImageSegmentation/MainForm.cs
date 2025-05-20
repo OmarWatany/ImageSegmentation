@@ -41,19 +41,19 @@ namespace ImageTemplate
             int k = int.Parse(textBox1.Text);
             Stopwatch timer = Stopwatch.StartNew();
             RedGraph.Segments.SegmentChannel(RedGraph, k);
-            int ur = RedGraph.CountUnSegmented();
+            int ur = RedGraph.Segments.CountUnSegmented();
             timer.Stop();
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
-            ur = BlueGraph.CountUnSegmented();
+            ur = BlueGraph.Segments.CountUnSegmented();
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
-            ur = GreenGraph.CountUnSegmented();
+            ur = GreenGraph.Segments.CountUnSegmented();
 
             Segments final = new Segments();
             final.Combine(RedGraph, BlueGraph, GreenGraph);
 
             var colors = final.CreateRandomColors(final.Count + 1);
             final.ColorSegments(colors, RedGraph);
-            ur = RedGraph.CountUnSegmented();
+            ur = RedGraph.Segments.CountUnSegmented();
 
             long time = timer.ElapsedMilliseconds;
             Console.WriteLine("number of segments:" + RedGraph.Segments.segments.Count);
