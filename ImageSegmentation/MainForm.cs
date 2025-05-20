@@ -45,13 +45,13 @@ namespace ImageTemplate
         {
             int k = int.Parse(textBox1.Text);
             Stopwatch timer = Stopwatch.StartNew();
-            RedGraph.Segments.SegmentChannel(RedGraph, k);
+            RedGraph.Segments.SegmentChannel(RedGraph, k);//O(E*logE + E*N), E: number of edges collected, N: number of pixels in smaller segment
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
 
             final.Combine(RedGraph, BlueGraph, GreenGraph);
 
-            colors = final.CreateRandomColors(final.Count + 1);
+            colors = final.CreateRandomColors(final.Count + 1); //O(N) , N: number of segments
             final.ColorSegments(colors, RedGraph);
             timer.Stop();
 

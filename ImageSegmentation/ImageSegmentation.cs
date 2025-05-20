@@ -14,27 +14,25 @@ namespace ImageTemplate
 
         public int ID;
         public List<Node> nodes;
-        public List<Edge> Edges; //contains all edges of the segment
         public int internalDifference;
 
 
         public Segment()
         {
             this.nodes = new List<Node>();
-            this.Edges = new List<Edge>();
             this.internalDifference = 0;
         }
 
-        public void Add(Node node,int weight)
+        public void Add(Node node,int weight)//O(1)
         {
             node.segment = this;
             this.nodes.Add(node);
             internalDifference = (internalDifference < weight) ? weight : internalDifference;
         }
-        public bool SegmentsComparison(PixelGraph graph, Segment s2,int weight, int k)
+        public bool SegmentsComparison(PixelGraph graph, Segment s2,int weight, int k)//O(1)
         {
-            double tao1 = k / this.count;
-            double tao2 = k / s2.count;
+            double tao1 = (double)k / this.count;
+            double tao2 = (double)k / s2.count;
             double MInt = Math.Min(this.internalDifference + tao1, s2.internalDifference + tao2);
             return (weight > MInt);
         }
