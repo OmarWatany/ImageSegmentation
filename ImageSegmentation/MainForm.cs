@@ -46,19 +46,19 @@ namespace ImageTemplate
             RedGraph.Segments.SegmentChannel(RedGraph, k);
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
-            timer.Stop();
 
             final.Combine(RedGraph, BlueGraph, GreenGraph);
 
             colors = final.CreateRandomColors(final.Count + 1);
             final.ColorSegments(colors, RedGraph);
+            timer.Stop();
 
             long time = timer.ElapsedMilliseconds;
             Console.WriteLine("number of segments:" + final.segments.Count);
             Console.WriteLine("Milliseconds taken to segment the image:" + time);
             Console.WriteLine("Seconds taken to segment the image:" + time/1000);
 
-            ImageOperations.DisplayImage(RedGraph.Picture, pictureBox2);
+            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
 
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
