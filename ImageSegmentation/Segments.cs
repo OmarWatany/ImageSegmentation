@@ -150,6 +150,18 @@ namespace ImageTemplate
                 }
             }
         }
+
+        public void ColorSegments(PixelGraph graph) //O(N) , N: number of pixels
+        {
+            RGBPixel[] colors = CreateRandomColors(graph.Segments.Count);
+            for (int i = 0; i < graph.height; i++)
+            {
+                for (int j = 0; j < graph.width; j++)
+                {
+                    graph.Picture[i, j] = colors[graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment)];
+                }
+            }
+        }
         public void Combine(PixelGraph RedGraph,PixelGraph BlueGraph,PixelGraph GreenGraph)
         {
             for (int r = 0; r < RedGraph.height; r++) {

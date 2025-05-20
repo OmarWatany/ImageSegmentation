@@ -32,7 +32,6 @@ namespace ImageTemplate
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.btnOpen = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.btnGaussSmooth = new System.Windows.Forms.Button();
             this.txtHeight = new System.Windows.Forms.TextBox();
             this.txtWidth = new System.Windows.Forms.TextBox();
@@ -43,6 +42,8 @@ namespace ImageTemplate
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.panel1.SuspendLayout();
@@ -52,7 +53,7 @@ namespace ImageTemplate
             // pictureBox1
             // 
             this.pictureBox1.Location = new System.Drawing.Point(6, 6);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(6);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(427, 360);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
@@ -62,7 +63,7 @@ namespace ImageTemplate
             // pictureBox2
             // 
             this.pictureBox2.Location = new System.Drawing.Point(6, 6);
-            this.pictureBox2.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.pictureBox2.Margin = new System.Windows.Forms.Padding(6);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(412, 360);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
@@ -73,7 +74,7 @@ namespace ImageTemplate
             // 
             this.btnOpen.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnOpen.Location = new System.Drawing.Point(710, 802);
-            this.btnOpen.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btnOpen.Margin = new System.Windows.Forms.Padding(6);
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(189, 139);
             this.btnOpen.TabIndex = 2;
@@ -81,22 +82,11 @@ namespace ImageTemplate
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(326, 756);
-            this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(258, 39);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Original Image";
-            // 
             // btnGaussSmooth
             // 
             this.btnGaussSmooth.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnGaussSmooth.Location = new System.Drawing.Point(942, 802);
-            this.btnGaussSmooth.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.btnGaussSmooth.Margin = new System.Windows.Forms.Padding(6);
             this.btnGaussSmooth.Name = "btnGaussSmooth";
             this.btnGaussSmooth.Size = new System.Drawing.Size(196, 139);
             this.btnGaussSmooth.TabIndex = 5;
@@ -108,7 +98,7 @@ namespace ImageTemplate
             // 
             this.txtHeight.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtHeight.Location = new System.Drawing.Point(562, 897);
-            this.txtHeight.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.txtHeight.Margin = new System.Windows.Forms.Padding(6);
             this.txtHeight.Name = "txtHeight";
             this.txtHeight.ReadOnly = true;
             this.txtHeight.Size = new System.Drawing.Size(110, 39);
@@ -118,7 +108,7 @@ namespace ImageTemplate
             // 
             this.txtWidth.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtWidth.Location = new System.Drawing.Point(562, 823);
-            this.txtWidth.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.txtWidth.Margin = new System.Windows.Forms.Padding(6);
             this.txtWidth.Name = "txtWidth";
             this.txtWidth.ReadOnly = true;
             this.txtWidth.Size = new System.Drawing.Size(110, 39);
@@ -153,7 +143,7 @@ namespace ImageTemplate
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panel1.Controls.Add(this.pictureBox1);
             this.panel1.Location = new System.Drawing.Point(24, 23);
-            this.panel1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.panel1.Margin = new System.Windows.Forms.Padding(6);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(872, 710);
             this.panel1.TabIndex = 15;
@@ -164,7 +154,7 @@ namespace ImageTemplate
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panel2.Controls.Add(this.pictureBox2);
             this.panel2.Location = new System.Drawing.Point(942, 23);
-            this.panel2.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.panel2.Margin = new System.Windows.Forms.Padding(6);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(838, 710);
             this.panel2.TabIndex = 16;
@@ -195,11 +185,33 @@ namespace ImageTemplate
             this.label2.Text = "K";
             this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(326, 756);
+            this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(258, 39);
+            this.label1.TabIndex = 3;
+            this.label1.Text = "Original Image";
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(1510, 802);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(193, 121);
+            this.button1.TabIndex = 20;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1808, 961);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.panel2);
@@ -211,7 +223,7 @@ namespace ImageTemplate
             this.Controls.Add(this.btnGaussSmooth);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnOpen);
-            this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "MainForm";
             this.Text = "Image Segmentation";
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -231,7 +243,6 @@ namespace ImageTemplate
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Button btnOpen;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnGaussSmooth;
         private System.Windows.Forms.TextBox txtHeight;
         private System.Windows.Forms.TextBox txtWidth;
@@ -242,6 +253,8 @@ namespace ImageTemplate
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button button1;
     }
 }
 
