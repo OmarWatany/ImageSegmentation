@@ -38,7 +38,7 @@ namespace ImageTemplate
             int max = Math.Max(bigSegment.internalDifference, Math.Max(smallSegment.internalDifference, edge.weight));
             for (int i = 0; i < smallSegment.count; i++)//O(N)
             {
-                bigSegment.Add(smallSegment.nodes[i],max);// O(1)
+                bigSegment.Add(smallSegment.nodes[i],(byte)max);// O(1)
             }
             this.segments.Remove(smallSegment);
         }

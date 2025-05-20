@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 namespace ImageTemplate
 {
-    public class Edge : IComparable<Edge>
+    public struct Edge : IComparable<Edge>
     {
-        public int weight;
+        public byte weight;
         public Node n1,n2;
-        public Edge(Node n1, Node n2, int weight)
+        public Edge(Node n1, Node n2, byte weight)
         {
             this.n1 = n1;
             this.n2 = n2;
             this.weight = weight;
         }
-        public Edge(int weight)
+        public Edge(byte weight)
         {
             this.weight = weight;
             this.n1 = null;
