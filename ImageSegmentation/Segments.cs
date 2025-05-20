@@ -31,44 +31,16 @@ namespace ImageTemplate
             return segments.Count - 1;
         }
 
-        public void MergeSegments(PixelGraph graph, Segment s1, Segment s2)
+        public void MergeSegments(PixelGraph graph, Segment s1, Segment s2,Edge edge)
         {
-            if (s1==EmptySegment1 && s2==EmptySegment2)
-            {
-                Node n1=EmptySegment1.nodes[0];
-                Node n2=EmptySegment2.nodes[0];
-                EmptySegment1.nodes.RemoveAt(0);
-                EmptySegment2.nodes.RemoveAt(0);
-                CreateSegment(n1);
-                n1.segment.Add(n2);
-                return;
-            }
-            else if (s1==EmptySegment1 || s2==EmptySegment1)
-            {
-                if (EmptySegment1.count < 1) return;
-                Node n1 = EmptySegment1.nodes[0];
-                EmptySegment1.nodes.RemoveAt(0);
-                Segment s = (s1 == EmptySegment1) ? s2 : s1;
-                s.Add(n1);
-                return;
-            }
-            else if (s2 == EmptySegment2 || s1 == EmptySegment2)
-            {
-                if (EmptySegment2.count < 1) return;
-                Node n2 = EmptySegment2.nodes[0];
-                EmptySegment2.nodes.RemoveAt(0);
-                Segment s = (s1 == EmptySegment2) ? s2 : s1;
-                s.Add(n2);
-                return;
-            }
-
             Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
             Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
+            int max = Math.Max(bigSegment.internalDifference, Math.Max(smallSegment.internalDifference, edge.weight));
             for (int i = 0; i < smallSegment.count; i++)
             {
-                bigSegment.Add(smallSegment.nodes[i]);
+                bigSegment.Add(smallSegment.nodes[i],max);
             }
-            this.segments.Remove(smallSegment); // O(n) operation
+            this.segments.Remove(smallSegment);
         }
 
         // NOTE: Probably class Segments' operation
@@ -100,10 +72,8 @@ namespace ImageTemplate
             Segment newSegment = new Segment
             {
                 ID = NewSegmentId,
-                //nodes = new List<Node> { node }
             };
-            //node.segment = newSegment;
-            newSegment.Add(node);
+            newSegment.Add(node,0);
             this.Add(newSegment);
         }
 
@@ -126,7 +96,8 @@ namespace ImageTemplate
                 {
                     MergeSegments(channelGraph,
                         n1.segment,
-                        n2.segment
+                        n2.segment,
+                        edge
                     );
                 }
 
