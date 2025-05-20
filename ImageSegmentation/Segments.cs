@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
 
 namespace ImageTemplate
 {
@@ -115,6 +116,12 @@ namespace ImageTemplate
 
         public void SegmentChannel(PixelGraph channelGraph, int k)
         {
+            //List<int> edges=  channelGraph.Edges.Values.ToList();
+            //edges.Sort();
+            //foreach (var edge in edges)
+            //{
+                
+            //}
             Node neighbor, myNode;
             for (int i = 0; i < channelGraph.height; i++)
             {

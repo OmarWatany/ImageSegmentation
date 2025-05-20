@@ -18,14 +18,14 @@ namespace ImageTemplate
 
         public int ID;
         public List<Node> nodes;
-        public Dictionary<(Node, Node), int> Edges; //contains all edges of the segment
+        public List<Edge> Edges; //contains all edges of the segment
         MSTree mst;
 
 
         public Segment()
         {
             this.nodes = new List<Node>();
-            this.Edges = new Dictionary<(Node, Node), int>();
+            this.Edges = new List<Edge>();
             this.mst = new MSTree(this);
         }
 
@@ -44,17 +44,16 @@ namespace ImageTemplate
             {
                 if(neighbor.segment == this)
                 {
-                    this.Edges[PixelGraph.MakeEdgeKey(node, neighbor)] = graph.getEdge(node, neighbor);
+                    this.Edges.Add(Edge.getEdge(node, neighbor,graph.Edges));
                     mst.Add(node);
                     mst.Add(neighbor);
                 }
             }
             mst.Add(node);
         }
-
-        public int getEdge(Node n1, Node n2)
+        public Edge getEdge(Node n1, Node n2)
         {
-            return this.Edges[PixelGraph.MakeEdgeKey(n1, n2)];
+            return Edges.Find(e => (e.n1 == n1 && e.n2 == n2) || ((e.n2 == n1 && e.n1 == n2)));
         }
 
         public int InternalDifference()
@@ -76,7 +75,7 @@ namespace ImageTemplate
                 .Select(n => n.neighbors
                 .Where(ni => ni.segment == bigSegment)
                 .DefaultIfEmpty(n)
-                .Min(ni => graph.getEdge(n, ni))).Min();
+                .Min(ni => Edge.getEdge(n, ni, graph.Edges).weight)).Min();
 
             //int minEdge = smallSegment.nodes.Select(n =>
             //    n.neighbors.Select(
