@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Forms;
 
 namespace ImageTemplate
 {
@@ -162,33 +163,39 @@ namespace ImageTemplate
                 }
             }
         }
-        public void Combine(PixelGraph RedGraph,PixelGraph BlueGraph,PixelGraph GreenGraph)
+        // In the Combine method, you want to create a "final segment" for each group of nodes that belong to the same segment in all three color channels (Red, Green, Blue).
+        // The logic is: For each segment in the Red channel, check if the corresponding nodes in the Green and Blue channels belong to the same segment as the first node in the Red segment. 
+        // If so, add them to the same final segment. Otherwise, create a new final segment for the node.
+
+        public void Combine(PixelGraph RedGraph, PixelGraph BlueGraph, PixelGraph GreenGraph)
         {
-            for (int r = 0; r < RedGraph.height; r++) {
-                for (int c = 0; c < RedGraph.width; c++)
+            foreach (Segment redSegment in RedGraph.Segments.segments)
+            {
+                // Use a dictionary to group nodes by their (green segment, blue segment) pair
+                var groupMap = new Dictionary<(int greenId, int blueId), List<Node>>();
+
+                foreach (Node node in redSegment.nodes)
                 {
+                    var greenSeg = GreenGraph.Nodes[node.index.y, node.index.x].segment;
+                    var blueSeg = BlueGraph.Nodes[node.index.y, node.index.x].segment;
+                    var key = (greenSeg.ID, blueSeg.ID);
 
-                    var RedNode = RedGraph.Nodes[r, c];
-                    var BlueNode = BlueGraph.Nodes[r, c];
-                    var GreenNode = GreenGraph.Nodes[r, c];
-                    for (int n = 0; n < RedNode.neighbors.Count; n++)
+                    if (!groupMap.ContainsKey(key))
+                        groupMap[key] = new List<Node>();
+                    groupMap[key].Add(node);
+                }
+
+                // For each group, create a final segment and assign it to all nodes in the group
+                foreach (var group in groupMap.Values)
+                {
+                    if (group.Count == 0) continue;
+                    CreateFinalSegment(group[0]);
+                    var finalSeg = group[0].finalsegment;
+                    for (int i = 1; i < group.Count; i++)
                     {
-                        var RedNeighbor = RedNode.neighbors[n];
-                        var BlueNeighbor = BlueNode.neighbors[n];
-                        var GreenNeighbor = GreenNode.neighbors[n];
-
-                        if (RedNeighbor.segment == RedNode.segment
-                        && BlueNeighbor.segment == BlueNode.segment
-                        && GreenNeighbor.segment == GreenNode.segment)
-                        {
-                            // the same segment
-                            if (RedNode.finalsegment.ID == -1) CreateFinalSegment(RedNode);
-                            RedNode.finalsegment.nodes.Add(RedNeighbor);
-                            RedNeighbor.finalsegment = RedNode.finalsegment;
-                        }
-
+                        finalSeg.nodes.Add(group[i]);
+                        group[i].finalsegment = finalSeg;
                     }
-
                 }
             }
         }
