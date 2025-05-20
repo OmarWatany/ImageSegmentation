@@ -19,10 +19,6 @@ namespace ImageTemplate
             this.n1 = null;
             this.n2 = null;
         }
-        public static Edge getEdge(Node n1, Node n2,List<Edge> Edges)
-        {
-            return Edges.Find(e => (e.n1 == n1 && e.n2 == n2) || ((e.n2 == n1 && e.n1 == n2))) ?? new Edge(-1);
-        }
         public int CompareTo(Edge other)
         {
             return this.weight.CompareTo(other.weight);

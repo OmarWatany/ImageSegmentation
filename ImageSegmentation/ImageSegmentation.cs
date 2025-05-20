@@ -15,39 +15,28 @@ namespace ImageTemplate
         public int ID;
         public List<Node> nodes;
         public List<Edge> Edges; //contains all edges of the segment
-        MSTree mst;
+        public int internalDifference;
 
 
         public Segment()
         {
             this.nodes = new List<Node>();
             this.Edges = new List<Edge>();
-            this.mst = new MSTree(this);
+            this.internalDifference = 0;
         }
 
-        public void Add(Node node)
+        public void Add(Node node,int weight)
         {
             node.segment = this;
             this.nodes.Add(node);
-            mst.Add(node);
-        }
-        public int InternalDifference()
-        {
-            // If the segment has 1 or less than 1, return 0
-            if (this.count <= 1) return 0;
-            var mst = this.mst;
-            // Return the maximum edge weight in the segment
-            return mst.Max;
+            internalDifference = (internalDifference < weight) ? weight : internalDifference;
         }
         public bool SegmentsComparison(PixelGraph graph, Segment s2,int weight, int k)
         {
-            double internalDiff1 = this.InternalDifference();
-            double internalDiff2 = s2.InternalDifference();
-            double segmentsDifference = weight;
-            double tao1 = (double)k / this.count;
-            double tao2 = (double)k / s2.count;
-            double MInt = Math.Min(internalDiff1 + tao1, internalDiff2 + tao2);
-            return (segmentsDifference > MInt);
+            double tao1 = k / this.count;
+            double tao2 = k / s2.count;
+            double MInt = Math.Min(this.internalDifference + tao1, s2.internalDifference + tao2);
+            return (weight > MInt);
         }
 
         public static Segment EmptySegment = new Segment

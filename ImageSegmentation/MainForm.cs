@@ -20,8 +20,6 @@ namespace ImageTemplate
         RGBPixel[] colors;
 
         int current = 0;
-        int g => (++current) % 3;
-        PixelGraph[] graphs = new PixelGraph[3];
         private void btnOpen_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
@@ -31,7 +29,7 @@ namespace ImageTemplate
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                //ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
+                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
                 RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
                 BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
@@ -71,18 +69,15 @@ namespace ImageTemplate
 
                 using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
                 {
-                    //sw.WriteLine(final.GetSegmentsInfo());
+                    sw.WriteLine(final.GetSegmentsInfo());
                 }
-                //if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                //{
-                //    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
-                //    {
-                //        sw.WriteLine(final.GetSegmentsInfo());
-                //    }
-
-                //    MessageBox.Show("Segment report has been saved to:\n" + saveFileDialog.FileName,
-                //    "File Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //}
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
+                    {
+                        sw.WriteLine(final.GetSegmentsInfo());
+                    }
+                }
             }
 
         }
