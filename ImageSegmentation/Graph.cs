@@ -25,11 +25,6 @@ namespace ImageTemplate
         public int width, height;
         public Func<RGBPixel, byte> GetColor;
         public List<Edge> Edges;
-
-        public Node Node((int y, int x) index)
-        {
-            return this.Nodes[index.y, index.x];
-        }
         public int CalcWeight(int pixel1, int pixel2)
         {
              return pixel1 > pixel2 ? (pixel1 - pixel2) : (pixel2 - pixel1);
@@ -53,18 +48,21 @@ namespace ImageTemplate
             {
                 for (int x = 0; x < width; x++) // O(N)
                 {
-                    for (int r = -1; r <= 1; r++) // O(1)
+                    Nodes[y, x].index = (y, x);
+                    if (x + 1 != width)
                     {
-                        if (y + r < 0 || y + r >= height) continue;
-                        for (int c = -1; c <= 1; c++) // O(1)
+                        Nodes[y, x].neighbors.Add(Nodes[y, x + 1]);
+                        Edges.Add(new Edge(Nodes[y, x], Nodes[y, x + 1], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y, x + 1]))));
+                        if (y + 1 != height)
                         {
-                            // traverse the surrounding cells
-                            if (x + c < 0 || x + c >= width) continue;
-                            if (r == 0 && c == 0) continue;
-                            Nodes[y, x].index = (y, x);
-                            Nodes[y, x].neighbors.Add(Nodes[y + r, x + c]);
-                            Edges.Add(new Edge(Nodes[y, x], Nodes[y + r, x + c], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y + r, x + c]))));
+                            Nodes[y, x].neighbors.Add(Nodes[y + 1, x + 1]);
+                            Edges.Add(new Edge(Nodes[y, x], Nodes[y + 1, x + 1], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y + 1, x + 1]))));
                         }
+                    }
+                    if (y + 1 != height)
+                    {
+                        Nodes[y, x].neighbors.Add(Nodes[y + 1, x]);
+                        Edges.Add(new Edge(Nodes[y, x], Nodes[y + 1, x], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y + 1, x]))));
                     }
                 }
             }
