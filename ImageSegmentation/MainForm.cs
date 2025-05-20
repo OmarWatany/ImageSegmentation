@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 
@@ -18,7 +19,7 @@ namespace ImageTemplate
         PixelGraph GreenGraph;
         Segments final;
         RGBPixel[] colors;
-
+        string folderPath;
         int current = 0;
         private void btnOpen_Click(object sender, EventArgs e)
         {
@@ -27,9 +28,10 @@ namespace ImageTemplate
             {
                 //Open the browsed image and display it
                 string OpenedFilePath = openFileDialog1.FileName;
+                folderPath = Path.GetDirectoryName(OpenedFilePath);
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8); //what filter size to use? //O(N^2)
+                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8);//O(N^2)
                 RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
                 BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
@@ -46,39 +48,26 @@ namespace ImageTemplate
             RedGraph.Segments.SegmentChannel(RedGraph, k);
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
-            timer.Stop();
 
             final.Combine(RedGraph, BlueGraph, GreenGraph);
 
             colors = final.CreateRandomColors(final.Count + 1);
             final.ColorSegments(colors, RedGraph);
+            timer.Stop();
 
             long time = timer.ElapsedMilliseconds;
             Console.WriteLine("number of segments:" + final.segments.Count);
             Console.WriteLine("Milliseconds taken to segment the image:" + time);
             Console.WriteLine("Seconds taken to segment the image:" + time/1000);
 
-            ImageOperations.DisplayImage(RedGraph.Picture, pictureBox2);
+            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
 
-            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
-            {
-                saveFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-                saveFileDialog.Title = "Save Segment Report";
-                saveFileDialog.FileName = "SegmentReport.txt";
 
-                using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
-                {
-                    sw.WriteLine(final.GetSegmentsInfo());
-                }
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName))
-                    {
-                        sw.WriteLine(final.GetSegmentsInfo());
-                    }
-                }
-            }
+            string textReportPath = Path.Combine(folderPath, "SegmentReport.txt");
+            string imagePath = Path.Combine(folderPath, "myOutput.bmp");
 
+            File.WriteAllText(textReportPath, final.GetSegmentsInfo());
+            pictureBox2.Image.Save(imagePath, ImageFormat.Bmp);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
