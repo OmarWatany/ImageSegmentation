@@ -31,7 +31,10 @@ namespace ImageTemplate
                 folderPath = Path.GetDirectoryName(OpenedFilePath);
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8);//O(N^2)
+                pictureBox2.Image = null;
+                //it must be checked before opening the image
+                if (checkBox2.Checked)
+                    ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8);//O(N^2)
                 RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
                 BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
                 GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
@@ -51,8 +54,8 @@ namespace ImageTemplate
 
             final.Combine(RedGraph, BlueGraph, GreenGraph);
 
-            colors = final.CreateRandomColors(final.Count + 1); //O(N) , N: number of segments
-            final.ColorSegments(colors, RedGraph);
+            final.CreateRandomColors(); //O(N) , N: number of segments
+            final.ColorFinalSegments(RedGraph); //O(N*P) , N: number of Segments, P: number of pixels
             timer.Stop();
 
             long time = timer.ElapsedMilliseconds;
@@ -61,6 +64,9 @@ namespace ImageTemplate
             Console.WriteLine("Seconds taken to segment the image:" + time/1000);
 
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            RedGraph.Segments.CreateRandomColors();
+            BlueGraph.Segments.CreateRandomColors();
+            GreenGraph.Segments.CreateRandomColors();
 
 
             string textReportPath = Path.Combine(folderPath, "SegmentReport.txt");
@@ -86,9 +92,8 @@ namespace ImageTemplate
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            pictureBox2.Image = null;
             if(current==-1)
-                final.ColorSegments(colors, RedGraph);
+                final.ColorFinalSegments(RedGraph);
             if (current==0)
                 RedGraph.Segments.ColorSegments(RedGraph);
             if (current == 1)
@@ -105,6 +110,11 @@ namespace ImageTemplate
         }
 
         private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
 
         }
