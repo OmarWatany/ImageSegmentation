@@ -8,12 +8,11 @@ namespace ImageTemplate
         public List<Node> neighbors;
         public (int y, int x) index;
         public Segment segment;
-        public Segment finalsegment;
+
         public Node()
         {
             neighbors = new List<Node>(8);
             segment = Segment.EmptySegment;
-            finalsegment = Segment.EmptySegment;
         }
     }
 
@@ -25,9 +24,9 @@ namespace ImageTemplate
         public int width, height;
         public Func<RGBPixel, byte> GetColor;
         public List<Edge> Edges;
-        public int CalcWeight(int pixel1, int pixel2)
+        public byte CalcWeight(byte pixel1, byte pixel2)
         {
-             return pixel1 > pixel2 ? (pixel1 - pixel2) : (pixel2 - pixel1);
+             return pixel1 > pixel2 ? (byte)(pixel1 - pixel2) : (byte)(pixel2 - pixel1);
         }
 
         public PixelGraph(RGBPixel[,] picture, Func<RGBPixel, byte> GetColor) //O(N) , N: number of pixels

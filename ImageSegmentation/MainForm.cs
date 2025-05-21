@@ -35,10 +35,6 @@ namespace ImageTemplate
                 //it must be checked before opening the image
                 if (checkBox2.Checked)
                     ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8);//O(N^2)
-                RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
-                BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
-                GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
-                final = new Segments();
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
@@ -48,14 +44,18 @@ namespace ImageTemplate
         {
             int k = int.Parse(textBox1.Text);
             Stopwatch timer = Stopwatch.StartNew();
+
+            RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
+            BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
+            GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
+            final = new Segments();
+
             RedGraph.Segments.SegmentChannel(RedGraph, k);//O(E*logE + E*N), E: number of edges collected, N: number of pixels in smaller segment
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
 
-            final.Combine(RedGraph, BlueGraph, GreenGraph);
+            var NewImage = final.Combine(RedGraph, BlueGraph, GreenGraph);
 
-            final.CreateRandomColors(); //O(N) , N: number of segments
-            final.ColorFinalSegments(RedGraph); //O(N*P) , N: number of Segments, P: number of pixels
             timer.Stop();
 
             long time = timer.ElapsedMilliseconds;
@@ -63,7 +63,7 @@ namespace ImageTemplate
             Console.WriteLine("Milliseconds taken to segment the image:" + time);
             Console.WriteLine("Seconds taken to segment the image:" + time/1000);
 
-            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            ImageOperations.DisplayImage(NewImage, pictureBox2);
             RedGraph.Segments.CreateRandomColors();
             BlueGraph.Segments.CreateRandomColors();
             GreenGraph.Segments.CreateRandomColors();
@@ -78,7 +78,8 @@ namespace ImageTemplate
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            textBox1.Text = "1";
+            //textBox1.Text = "1";
+            textBox1.Text = "30000";
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -92,8 +93,8 @@ namespace ImageTemplate
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            if(current==-1)
-                final.ColorFinalSegments(RedGraph);
+            //if(current==-1)
+            //    final.ColorFinalSegments(RedGraph);
             if (current==0)
                 RedGraph.Segments.ColorSegments(RedGraph);
             if (current == 1)
