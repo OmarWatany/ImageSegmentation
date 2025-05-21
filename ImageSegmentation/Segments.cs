@@ -51,10 +51,11 @@ namespace ImageTemplate
 
         public RGBPixel[] CreateRandomColors(int count)//O(N) , N: number of segments
         {
-            var colors = new RGBPixel[count+1]; HashSet<int> usedColors = new HashSet<int>();
+            var colors = new RGBPixel[count+1];
+            HashSet<int> usedColors = new HashSet<int>();
             Random rand = new Random();
 
-            for (int i = 0; i < Count+1; i++)
+            for (int i = 0; i < count+1; i++)
             {
                 int rgb;
                 do
@@ -169,7 +170,6 @@ namespace ImageTemplate
                 var Nodes = graph.Nodes;
                 int height = graph.height;
                 int width = graph.width;
-
 
                 var newImage = new RGBPixel[height,width];
 
