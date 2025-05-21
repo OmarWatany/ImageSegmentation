@@ -18,7 +18,6 @@ namespace ImageTemplate
         PixelGraph BlueGraph;
         PixelGraph GreenGraph;
         Segments final;
-        RGBPixel[] colors;
         string folderPath;
         int current = 0;
         private void btnOpen_Click(object sender, EventArgs e)
@@ -57,7 +56,6 @@ namespace ImageTemplate
             GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
             GreenGraph.Edges = null;
-
 
             final = new Segments(RedGraph);
 
