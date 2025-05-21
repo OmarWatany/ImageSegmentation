@@ -9,7 +9,8 @@ namespace ImageTemplate
     {
         public int segmentIdIncrement = 1;
         public int NewSegmentId => ++segmentIdIncrement; //O(1)
-        //we have to use that because segments.count is variable , so two segments can have the same id
+                                                         //we have to use that because segments.count is variable , so two segments can have the same id
+        public RGBPixel[] colors;
 
         public List<Segment> segments;
         public int Count
@@ -43,19 +44,34 @@ namespace ImageTemplate
             this.segments.Remove(smallSegment);
         }
 
-        // NOTE: Probably class Segments' operation
-        public RGBPixel[] CreateRandomColors(int m) //O(N) , N: number of segments
+        public void CreateRandomColors()//O(N) , N: number of segments
         {
-            RGBPixel[] colors = new RGBPixel[m];
-            for (int i = 0; i < m; i++)
-            {
-                colors[i].red = (byte)((i * 100) % 255);
-                colors[i].green = (byte)((i * 20) % 255);
-                colors[i].blue = (byte)((i * 30) % 255);
-            }
-            return colors;
-        }
+            colors = new RGBPixel[Count+1];
+            HashSet<int> usedColors = new HashSet<int>();
+            Random rand = new Random();
 
+            for (int i = 0; i < Count+1; i++)
+            {
+                int rgb;
+                do
+                {
+                    byte r = (byte)rand.Next(256);//O(1)
+                    byte g = (byte)rand.Next(256);
+                    byte b = (byte)rand.Next(256);
+                    rgb = (r << 16) | (g << 8) | b; // encode RGB into 24 bits
+
+                    if (!usedColors.Contains(rgb))
+                    {
+                        colors[i].red = r;
+                        colors[i].green = g;
+                        colors[i].blue = b;
+                        usedColors.Add(rgb);
+                        break;
+                    }
+
+                } while (true); // repeat until a new color is found//O(1)
+            }
+        }
         public void CreateFinalSegment(Node node)//O(1)
         {
             Segment newSegment = new Segment
@@ -105,7 +121,7 @@ namespace ImageTemplate
             }
         }
 
-        public void ColorSegments(RGBPixel[] colors, PixelGraph graph) //O(N*P) , N: number of Segments, P: number of pixels
+        public void ColorFinalSegments(PixelGraph graph) //O(N*P) , N: number of Segments, P: number of pixels
         {
             for (int i = 0; i < graph.height; i++)
             {
@@ -115,18 +131,17 @@ namespace ImageTemplate
                 }
             }
         }
-
-        public void ColorSegments(PixelGraph graph) //O(N) , N: number of pixels
+        public void ColorSegments(PixelGraph graph) //O(N*P) , N: number of Segments, P: number of pixels
         {
-            RGBPixel[] colors = CreateRandomColors(graph.Segments.Count);
             for (int i = 0; i < graph.height; i++)
             {
                 for (int j = 0; j < graph.width; j++)
                 {
-                    graph.Picture[i, j] = colors[graph.Segments.segments.IndexOf(graph.Nodes[i, j].segment)];
+                    graph.Picture[i, j] = colors[this.segments.IndexOf(graph.Nodes[i, j].segment)];//O(N) , N: number of segments
                 }
             }
         }
+
         //TODO: complete the analysis
         public void Combine(PixelGraph RedGraph, PixelGraph BlueGraph, PixelGraph GreenGraph)
         {
