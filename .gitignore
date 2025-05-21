@@ -400,7 +400,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 *Complete/
+*Sample*/
 
 *.txt
 *.bmp
-[1] Sample Cases/

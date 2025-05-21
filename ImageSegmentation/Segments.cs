@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace ImageTemplate
@@ -13,9 +14,11 @@ namespace ImageTemplate
                                                          //we have to use that because segments.count is variable , so two segments can have the same id
         RGBPixel[] colors;
         public List<Segment> segments;
+        int _count = 0;
         public int Count
         {
-            get => segments.Count;
+            get => (segments.Count != 0) ? segments.Count : _count;
+            set => _count = value;
         }
         public static Segment EmptySegment1 = new Segment { ID = 0 }, EmptySegment2 = new Segment{ ID = 1 };
 
@@ -128,39 +131,56 @@ namespace ImageTemplate
             }
         }
 
+        struct SegmentInfo
+        {
+            public RGBPixel color;
+            public int count;
+
+            public SegmentInfo(RGBPixel color,int count)
+            {
+                this.color = color;
+                this.count = count;
+            }
+
+            public SegmentInfo Inc() => new SegmentInfo(this.color, this.count+1);
+        }
+
+        Dictionary<int, SegmentInfo> Ids = new Dictionary<int, SegmentInfo>();
+
         //TODO: complete the analysis
         public RGBPixel[,] Combine(PixelGraph RedGraph, PixelGraph BlueGraph, PixelGraph GreenGraph)
         {
             int[,] finalId = new int[RedGraph.height, RedGraph.width];
-            Dictionary<int, RGBPixel> Ids = new Dictionary<int, RGBPixel>();
 
-            foreach (Segment redSegment in RedGraph.Segments.segments)
+            var groupMap = new Dictionary<(int rid,int gid, int bid), List<Node>>();
+            for (var y = 0;y < BlueGraph.height; y++) // O(WH) width * height
             {
-                // Use a dictionary to group nodes by their (green segment, blue segment) pair
-                var groupMap = new Dictionary<(int greenId, int blueId), List<Node>>();
-
-                foreach (Node node in redSegment.nodes)
+                for(var x= 0;x < BlueGraph.width; x++)
                 {
-                    var greenSeg = GreenGraph.Nodes[node.index.y, node.index.x].segment;
-                    var blueSeg = BlueGraph.Nodes[node.index.y, node.index.x].segment;
-                    var key = (greenSeg.ID, blueSeg.ID);
+                    Node node = BlueGraph.Nodes[y, x];
+                    var redSeg = RedGraph.Nodes[y, x].segment;
+                    var greenSeg = GreenGraph.Nodes[y, x].segment;
+                    var blueSeg = BlueGraph.Nodes[y, x].segment;
+                    var key = (redSeg.ID, greenSeg.ID, blueSeg.ID);
 
-                    if (!groupMap.ContainsKey(key))//O(1), because its a dictionary 
+                    if (!groupMap.ContainsKey(key)) //O(1), because its a dictionary 
                         groupMap[key] = new List<Node>();
-                    groupMap[key].Add(node);//O(1)
+                    groupMap[key].Add(node); //O(1)
                 }
+            }
 
-                // For each group, create a final segment and assign it to all nodes in the group
-                foreach (var group in groupMap.Values)
+            // For each group, create a final segment and assign it to all nodes in the group
+            foreach (var group in groupMap.Values) // O(G) G: number of combined segments
+            {
+                if (group.Count == 0) continue;
+                var fid = NewSegmentId;//O(1)
+                this.Count++;
+                Ids[fid] = new SegmentInfo().Inc();
+                finalId[group[0].index.y, group[0].index.x] = fid;
+                for (int i = 1; i < group.Count; i++) // O(N) N: number of nodes in subsegment
                 {
-                    if (group.Count == 0) continue;
-                    var fid = NewSegmentId;//O(1)
-                    Ids[fid] = new RGBPixel();
-                    finalId[group[0].index.y, group[0].index.x] = fid;
-                    for (int i = 1; i < group.Count; i++)
-                    {
-                        finalId[group[i].index.y, group[i].index.x] = fid;
-                    }
+                    finalId[group[i].index.y, group[i].index.x] = fid;
+                    Ids[fid] = Ids[fid].Inc();
                 }
             }
 
@@ -178,7 +198,7 @@ namespace ImageTemplate
                 for (int i = 0; i < Ids.Count; i++)
                 {
                     var item = Ids.ElementAt(i);
-                    Ids[item.Key] = colors[i];
+                    Ids[item.Key] = new SegmentInfo(colors[i],Ids[item.Key].count);
                 }
 
                 (int y,int x) NodeIdx;
@@ -187,7 +207,7 @@ namespace ImageTemplate
                     for (int j = 0; j < width; j++)
                     {
                         NodeIdx = Nodes[i, j].index;
-                        newImage[i, j] = Ids[finalId[NodeIdx.y,NodeIdx.x]];//O(N) , N: number of segments
+                        newImage[i, j] = Ids[finalId[NodeIdx.y,NodeIdx.x]].color;//O(N) , N: number of segments
                     }
                 }
 
@@ -197,19 +217,19 @@ namespace ImageTemplate
 
         public string GetSegmentsInfo()
         {
-            int numSegments = segments.Count;
+            int numSegments = this.Count;
 
             List<int> sizes = new List<int>();
-            foreach (var segment in segments)
+            foreach (var seg in Ids) // O(S) S: number of final segments
             {
-                sizes.Add(segment.count);
+                sizes.Add(seg.Value.count);
             }
 
-            sizes.Sort((a, b) => b.CompareTo(a));
+            sizes.Sort((a, b) => b.CompareTo(a)); // O(N LOG N) N: number of sizes
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"{numSegments}");
-            foreach (int size in sizes)
+            sb.AppendLine($"{numSegments}"); // O(S) S: size of string
+            foreach (int size in sizes) //O(NS) N: number of sizes, S: size of string
             {
                 sb.AppendLine(size.ToString());
             }

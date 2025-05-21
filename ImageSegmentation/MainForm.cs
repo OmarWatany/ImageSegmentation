@@ -46,13 +46,20 @@ namespace ImageTemplate
             Stopwatch timer = Stopwatch.StartNew();
 
             RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
-            BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
-            GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
-            final = new Segments();
-
             RedGraph.Segments.SegmentChannel(RedGraph, k);//O(E*logE + E*N), E: number of edges collected, N: number of pixels in smaller segment
+            RedGraph.Edges = null;
+
+            BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
+            BlueGraph.Edges = null;
+
+
+            GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
+            GreenGraph.Edges = null;
+
+
+            final = new Segments();
 
             var NewImage = final.Combine(RedGraph, BlueGraph, GreenGraph);
 

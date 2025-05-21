@@ -1,17 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 namespace ImageTemplate
 {
+    public struct NeighborList
+    {
+        Node[] List_;
+        public int Count;
+        public NeighborList(int count = 8)
+        {
+            Count = 0;
+            List_ = new Node[count];
+        }
+
+        public Node this[int index]
+        {
+            get
+            {
+                return List_[index];
+            }
+            set
+            {
+                List_[index] = value;
+                Count++;
+            }
+        }
+
+        public void Add(Node node)
+        {
+            List_[Count++] = node;
+        }
+    }
+
     public class Node
     {
         //public Segment segment;
-        public List<Node> neighbors;
+        public NeighborList neighbors;
         public (int y, int x) index;
         public Segment segment;
 
         public Node()
         {
-            neighbors = new List<Node>(8);
+            neighbors = new NeighborList(8);
             segment = Segment.EmptySegment;
         }
     }
