@@ -46,13 +46,20 @@ namespace ImageTemplate
             Stopwatch timer = Stopwatch.StartNew();
 
             RedGraph = new PixelGraph(this.ImageMatrix,x => x.red);
-            BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
-            GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
-            final = new Segments();
-
             RedGraph.Segments.SegmentChannel(RedGraph, k);//O(E*logE + E*N), E: number of edges collected, N: number of pixels in smaller segment
+            RedGraph.Edges = null;
+
+            BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
             BlueGraph.Segments.SegmentChannel(BlueGraph, k);
+            BlueGraph.Edges = null;
+
+
+            GreenGraph = new PixelGraph(this.ImageMatrix, x => x.green);
             GreenGraph.Segments.SegmentChannel(GreenGraph, k);
+            GreenGraph.Edges = null;
+
+
+            final = new Segments(RedGraph);
 
             var NewImage = final.Combine(RedGraph, BlueGraph, GreenGraph);
 
@@ -90,24 +97,6 @@ namespace ImageTemplate
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
 
-        }
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //if(current==-1)
-            //    final.ColorFinalSegments(RedGraph);
-            if (current==0)
-                RedGraph.Segments.ColorSegments(RedGraph);
-            if (current == 1)
-                GreenGraph.Segments.ColorSegments(GreenGraph);
-            else if (current == 2)
-                BlueGraph.Segments.ColorSegments(BlueGraph);
-
-            ImageOperations.DisplayImage(GreenGraph.Picture, pictureBox2);
-            current++;
-            if (current == 3)
-            {
-                current = -1;
-            }
         }
 
         private void panel2_Paint(object sender, PaintEventArgs e)

@@ -9,24 +9,23 @@ namespace ImageTemplate
     {
         public int count
         {
-            get => nodes.Count;
+            get => nodeIndeces.Count;
         }
 
-        public int ID;
-        public List<Node> nodes;
+        public List<(int y, int x)> nodeIndeces;
         public int internalDifference;
 
 
         public Segment()
         {
-            this.nodes = new List<Node>();
+            this.nodeIndeces = new List<(int,int)>();
             this.internalDifference = 0;
         }
 
         public void Add(Node node,int weight)//O(1)
         {
+            this.nodeIndeces.Add(node.index);
             node.segment = this;
-            this.nodes.Add(node);
             internalDifference = (internalDifference < weight) ? weight : internalDifference;
         }
         public bool SegmentsComparison(PixelGraph graph, Segment s2,int weight, int k)//O(1)
@@ -37,9 +36,6 @@ namespace ImageTemplate
             return (weight > MInt);
         }
 
-        public static Segment EmptySegment = new Segment
-        {
-            ID = -1
-        };
+        public static Segment EmptySegment = new Segment();
     }
 }

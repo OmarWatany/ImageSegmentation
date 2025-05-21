@@ -13,12 +13,14 @@ namespace ImageTemplate
             this.n2 = n2;
             this.weight = weight;
         }
+
         public Edge(byte weight)
         {
             this.weight = weight;
             this.n1 = null;
             this.n2 = null;
         }
+
         public int CompareTo(Edge other)
         {
             return this.weight.CompareTo(other.weight);

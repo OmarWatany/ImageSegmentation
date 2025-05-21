@@ -1,17 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 namespace ImageTemplate
 {
+    public struct NeighborList
+    {
+        Node[] List_;
+        public int Count;
+        public NeighborList(int count = 8)
+        {
+            Count = 0;
+            List_ = new Node[count];
+        }
+
+        public Node this[int index]
+        {
+            get
+            {
+                return List_[index];
+            }
+            set
+            {
+                List_[index] = value;
+                Count++;
+            }
+        }
+
+        public void Add(Node node)
+        {
+            List_[Count++] = node;
+        }
+    }
+
     public class Node
     {
         //public Segment segment;
-        public List<Node> neighbors;
+        public NeighborList neighbors;
         public (int y, int x) index;
         public Segment segment;
 
-        public Node()
+        public Node(int y, int x)
         {
-            neighbors = new List<Node>(8);
+            index = (y, x);
+            neighbors = new NeighborList(8);
             segment = Segment.EmptySegment;
         }
     }
@@ -35,13 +66,13 @@ namespace ImageTemplate
             this.height = picture.GetLength(0);
             this.width = picture.GetLength(1);
             this.Nodes = new Node[picture.GetLength(0), picture.GetLength(1)];
-            this.Segments = new Segments();
+            this.Segments = new Segments(this);
             this.GetColor = GetColor; // Maybe we could use it 
             this.Edges = new List<Edge>();
 
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
-                    Nodes[y, x] = new Node();
+                    Nodes[y, x] = new Node(y, x);
 
             for (int y = 0; y < height; y++) // O(W*H)
             {
@@ -65,6 +96,11 @@ namespace ImageTemplate
                     }
                 }
             }
+        }
+
+        public Node this[int y, int x] {
+            get { return Nodes[y, x]; }
+            set {  Nodes[y, x] = value;}
         }
     }
 }
