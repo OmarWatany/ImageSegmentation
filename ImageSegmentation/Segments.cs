@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -131,11 +132,53 @@ namespace ImageTemplate
         Dictionary<int, SegmentInfo> Ids = new Dictionary<int, SegmentInfo>();
 
         //TODO: complete the analysis
+        public struct GroupMap
+        {
+            public Dictionary<int, Dictionary<int, Dictionary<int, List<Node>>>> ids;
+            public GroupMap(int i, int j, int k)
+            {
+                ids = new Dictionary<int, Dictionary<int, Dictionary<int, List<Node>>>>();
+            }
+
+            public bool Contains((int x, int y, int z) idx)
+            {
+                if (!ids.ContainsKey(idx.x)) return false;
+                if (!ids[idx.x].ContainsKey(idx.y)) return false;
+                if (!ids[idx.x][idx.y].ContainsKey(idx.z)) return false;
+                return true;
+            }
+
+            public List<Node> this[(int x, int y, int z) idx]
+            {
+                get => ids[idx.x][idx.y][idx.z];
+                set {
+                    if (!ids.ContainsKey(idx.x)) ids[idx.x] = new Dictionary<int, Dictionary<int, List<Node>>>();
+                    if (!ids[idx.x].ContainsKey(idx.y)) ids[idx.x][idx.y] = new Dictionary<int, List<Node>>();
+                    if (!ids[idx.x][idx.y].ContainsKey(idx.z)) ids[idx.x][idx.y][idx.z] = new List<Node>();
+                    ids[idx.x][idx.y][idx.z] = value;
+                }
+            }
+
+            private List<List<Node>> values() {
+                List<List<Node>> Values = new List<List<Node>>();
+
+                foreach (var x in ids)
+                    foreach (var y in x.Value)
+                        foreach (var z in y.Value)
+                            Values.Add(z.Value);
+
+                return Values;
+            }
+
+            public List<List<Node>> Values => values();
+        }
+
         public RGBPixel[,] Combine(PixelGraph RedGraph, PixelGraph BlueGraph, PixelGraph GreenGraph)
         {
             int[,] finalId = ids.ids;
 
-            var groupMap = new Dictionary<(int rid,int gid, int bid), List<Node>>();
+            //var groupMap = new Dictionary<(int rid,int gid, int bid), List<Node>>();
+            var groupMap = new GroupMap(RedGraph.Segments.NewSegmentId, BlueGraph.Segments.NewSegmentId, GreenGraph.Segments.NewSegmentId);
             for (var y = 0;y < BlueGraph.height; y++) // O(WH) width * height
             {
                 for(var x= 0;x < BlueGraph.width; x++)
@@ -146,9 +189,9 @@ namespace ImageTemplate
                     var greenid = GreenGraph.Segments.ids[node];
                     var blueid = BlueGraph.Segments.ids[node];
 
-                    var key = (redid,greenid, blueid);
+                    var key = (redid, greenid, blueid);
 
-                    if (!groupMap.ContainsKey(key)) //O(1), because its a dictionary 
+                    if (!groupMap.Contains(key)) //O(1), because its a dictionary 
                         groupMap[key] = new List<Node>();
                     groupMap[key].Add(node); //O(1)
                 }

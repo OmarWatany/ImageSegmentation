@@ -98,9 +98,11 @@ namespace ImageTemplate
             }
         }
 
-        public Node this[int y, int x] {
-            get { return Nodes[y, x]; }
-            set {  Nodes[y, x] = value;}
+        public Node this[int y, int x]
+        {
+            get => this.Nodes[y, x];
+            set => this.Nodes[y, x] = value;
         }
+
     }
 }
