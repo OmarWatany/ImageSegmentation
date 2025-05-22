@@ -78,29 +78,25 @@ namespace ImageTemplate
             {
                 for (int x = 0; x < width; x++) // O(N)
                 {
-                    Nodes[y, x].index = (y, x);
-                    if (x + 1 != width)
+                    for (int r = -1; r <= 1; r++) 
                     {
-                        Nodes[y, x].neighbors.Add(Nodes[y, x + 1]);
-                        Edges.Add(new Edge(Nodes[y, x], Nodes[y, x + 1], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y, x + 1]))));
-                        if (y + 1 != height)
+                        if (r + y == -1 || r + y >= this.height) continue;
+                        for(int c = -1; c <= 1; c++)
                         {
-                            Nodes[y, x].neighbors.Add(Nodes[y + 1, x + 1]);
-                            Edges.Add(new Edge(Nodes[y, x], Nodes[y + 1, x + 1], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y + 1, x + 1]))));
+                            if (r == 0 && c == 0) continue;
+                            if (c + x == -1 || c + x >= this.width) continue;
+                            Nodes[y, x].neighbors.Add(Nodes[r + y, c + x]);
+                            Edges.Add(new Edge(Nodes[y, x], Nodes[r + y, c + x], CalcWeight(GetColor(picture[y, x]), GetColor(picture[r + y, c + x]))));
                         }
-                    }
-                    if (y + 1 != height)
-                    {
-                        Nodes[y, x].neighbors.Add(Nodes[y + 1, x]);
-                        Edges.Add(new Edge(Nodes[y, x], Nodes[y + 1, x], CalcWeight(GetColor(picture[y, x]), GetColor(picture[y + 1, x]))));
                     }
                 }
             }
         }
 
-        public Node this[int y, int x] {
-            get { return Nodes[y, x]; }
-            set {  Nodes[y, x] = value;}
+        public Node this[int y, int x]
+        {
+            get => this.Nodes[y, x];
+            set => this.Nodes[y, x] = value;
         }
     }
 }
