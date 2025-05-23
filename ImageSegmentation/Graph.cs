@@ -98,5 +98,6 @@ namespace ImageTemplate
             get => this.Nodes[y, x];
             set => this.Nodes[y, x] = value;
         }
+
     }
 }
