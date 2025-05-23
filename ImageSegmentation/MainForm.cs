@@ -66,12 +66,14 @@ namespace ImageTemplate
             Console.WriteLine("Milliseconds taken to segment the image:" + time);
             Console.WriteLine("Seconds taken to segment the image:" + time / 1000);
 
+            MessageBox.Show("time: " + time + "ms");
             ImageOperations.DisplayImage(NewImage, pictureBox2);
 
-            string textReportPath = Path.Combine(folderPath, "SegmentReport.txt");
-            string imagePath = Path.Combine(folderPath, "myOutput.bmp");
 
+            //string textReportPath = Path.Combine(folderPath, "SegmentReport.txt");
             //File.WriteAllText(textReportPath, final.GetSegmentsInfo());
+
+            string imagePath = Path.Combine(folderPath, "myOutput.bmp");
             pictureBox2.Image.Save(imagePath, ImageFormat.Bmp);
         }
 
@@ -110,8 +112,8 @@ namespace ImageTemplate
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            //textBox1.Text = "1";
-            textBox1.Text = "30000";
+            textBox1.Text = "1";
+            //textBox1.Text = "30000";
         }
 
         private void label2_Click(object sender, EventArgs e)
