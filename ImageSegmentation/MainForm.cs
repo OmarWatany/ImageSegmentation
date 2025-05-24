@@ -18,6 +18,7 @@ namespace ImageTemplate
         PixelGraph BlueGraph;
         PixelGraph GreenGraph;
         Segments final;
+        bool GaussianFilterApllied = false;
         string folderPath;
         private void btnOpen_Click(object sender, EventArgs e)
         {
@@ -31,8 +32,6 @@ namespace ImageTemplate
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 pictureBox2.Image = null;
                 //it must be checked before opening the image
-                if (checkBox2.Checked)
-                    ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8);//O(N^2)
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
@@ -40,11 +39,18 @@ namespace ImageTemplate
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
+
+            if (!GaussianFilterApllied && checkBox2.Checked)
+            {
+                ImageMatrix = ImageTemplate.ImageOperations.GaussianFilter1D(ImageMatrix, 5, 0.8);//O(N^2)
+                GaussianFilterApllied = true;
+            }
+
             int k = int.Parse(textBox1.Text);
             Stopwatch timer = Stopwatch.StartNew();
 
             RedGraph = new PixelGraph(this.ImageMatrix, x => x.red);
-            RedGraph.Segments.SegmentChannel(RedGraph, k);//O(E*logE + E*N), E: number of edges collected, N: number of pixels in smaller segment
+            RedGraph.Segments.SegmentChannel(RedGraph, k);//O(E*logE + E*N), E: number of Edges collected, N: number of pixels in smaller segment
             RedGraph.Edges = null;
 
             BlueGraph = new PixelGraph(this.ImageMatrix, x => x.blue);
@@ -62,16 +68,13 @@ namespace ImageTemplate
             timer.Stop();
 
             long time = timer.ElapsedMilliseconds;
-            Console.WriteLine("number of segments:" + final.segments.Count);
-            Console.WriteLine("Milliseconds taken to segment the image:" + time);
-            Console.WriteLine("Seconds taken to segment the image:" + time / 1000);
 
-            MessageBox.Show("time: " + time + "ms");
+            MessageBox.Show("time: " + time + "ms\n" + "Segments Count: " + final.segments.Count);
             ImageOperations.DisplayImage(NewImage, pictureBox2);
 
 
-            //string textReportPath = Path.Combine(folderPath, "SegmentReport.txt");
-            //File.WriteAllText(textReportPath, final.GetSegmentsInfo());
+            string textReportPath = Path.Combine(folderPath, "SegmentReport.txt");
+            File.WriteAllText(textReportPath, final.GetSegmentsInfo());
 
             string imagePath = Path.Combine(folderPath, "myOutput.bmp");
             pictureBox2.Image.Save(imagePath, ImageFormat.Bmp);
@@ -112,8 +115,8 @@ namespace ImageTemplate
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            textBox1.Text = "1";
-            //textBox1.Text = "30000";
+            //textBox1.Text = "1";
+            textBox1.Text = "30000";
         }
 
         private void label2_Click(object sender, EventArgs e)

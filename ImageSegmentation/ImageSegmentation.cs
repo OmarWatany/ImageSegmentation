@@ -28,7 +28,7 @@ namespace ImageTemplate
             node.segment = this;
             internalDifference = (internalDifference < weight) ? weight : internalDifference;
         }
-        public bool SegmentsComparison(PixelGraph graph, Segment s2,int weight, int k)//O(1)
+        public bool SegmentsComparison(PixelGraph graph, Segment s2, int weight, int k)//O(1)
         {
             double tao1 = (double)k / this.count;
             double tao2 = (double)k / s2.count;

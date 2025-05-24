@@ -30,6 +30,12 @@ namespace ImageTemplate
             get {  return ids[y, x]; }
             set {  ids[y, x] = value; }
         }
+
+        public int this[(int y, int x) idx]
+        {
+            get {  return ids[idx.y,idx. x]; }
+            set {  ids[idx.y, idx.x] = value; }
+        }
     }
 
     public class Segments
@@ -64,19 +70,18 @@ namespace ImageTemplate
             return segments.Count - 1;
         }
 
-        public void MergeSegments(PixelGraph graph, Segment s1, Segment s2,Edge edge)//O(N), N: # of pixels of smaller segment
+        public void MergeSegments(PixelGraph graph, Segment s1, Segment s2,byte weight)//O(N), N: # of pixels of smaller segment
         {
             Segment smallSegment = (s1.count < s2.count) ? s1 : s2;
             Segment bigSegment = (s1.count < s2.count) ? s2 : s1;
 
-            var f = bigSegment.nodeIndeces.First();
-            var bigSegmentId = ids[f.y, f.x];
-            int max = Math.Max(bigSegment.internalDifference, Math.Max(smallSegment.internalDifference, edge.weight));
+            var bigSegmentId = ids[bigSegment.nodeIndeces.First()];
+            int max = Math.Max(bigSegment.internalDifference, Math.Max(smallSegment.internalDifference, weight));
             for (int i = 0; i < smallSegment.count; i++)//O(N)
             {
                 var nidx = smallSegment.nodeIndeces[i];
                 bigSegment.Add(graph[nidx.y,nidx.x], (byte)max); // O(1)
-                ids[graph[nidx.y,nidx.x]] = bigSegmentId;
+                ids[graph[nidx]] = bigSegmentId;
             }
         }
 
@@ -87,29 +92,32 @@ namespace ImageTemplate
             ids[node] = NewSegmentId;
         }
 
-        public void SegmentChannel(PixelGraph channelGraph, int k)//O(E*logE + E*N), E: number of edges collected, N: number of pixels in smaller segment
+        public void SegmentChannel(PixelGraph channelGraph, int k)//O(E*logE + E*N), E: number of Edges collected, N: number of pixels in smaller segment
         {
-            channelGraph.Edges.Sort();//O(E*logE), E: number of edges collected
-            Node n1,n2;
-            foreach (var edge in channelGraph.Edges)//O(E),E: number of edges collected
+            Node n1, n2;
+            for (int weight = 0; weight < 256; weight++) //O(E),E: number of Edges collected
             {
-                n1 = edge.n1;
-                n2 = edge.n2;
-                if (IsUnsegmented(n1))//O(1)
-                    CreateSegment(n1);//O(1)
-                if (IsUnsegmented(n2)) CreateSegment(n2);
-                if (AreSameSegment(n1, n2))//O(1)
-                    continue;
-                if (!n1.segment
-                    .SegmentsComparison(channelGraph,
-                    n2.segment,edge.weight,
-                    k)) //O(1)
+                var edges = channelGraph.Edges[weight];
+                foreach (var edge in edges)
                 {
-                    MergeSegments(channelGraph,
-                        n1.segment,
-                        n2.segment,
-                        edge
-                    );//O(N), N: # of pixels of smaller segment
+                    n1 = edge.n1;
+                    n2 = edge.n2;
+                    if (IsUnsegmented(n1))//O(1)
+                        CreateSegment(n1);//O(1)
+                    if (IsUnsegmented(n2)) CreateSegment(n2);
+                    if (AreSameSegment(n1, n2))//O(1)
+                        continue;
+                    if (!n1.segment
+                        .SegmentsComparison(channelGraph,
+                        n2.segment, weight,
+                        k)) //O(1)
+                    {
+                        MergeSegments(channelGraph,
+                            n1.segment,
+                            n2.segment,
+                            (byte)weight
+                        );//O(N), N: # of pixels of smaller segment
+                    }
                 }
             }
             this.segments.Clear();// O(N)
